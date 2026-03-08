@@ -1,0 +1,28 @@
+{
+  "name": "architecture-plan",
+  "requires": ["tech-stack"],
+  "capabilities": [
+    {
+      "skill": "architecture-plan",
+      "owners": ["engineer", "ceo"],
+      "fallbackSkill": "architecture-plan.fallback"
+    },
+    {
+      "skill": "design-system",
+      "owners": ["ui-designer", "engineer"],
+      "fallbackSkill": "design-system.fallback"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Design initial system architecture",
+      "assignTo": "capability:architecture-plan",
+      "description": "Based on the tech stack decisions, design the system architecture: component structure, data flow, API boundaries, and deployment model. Document in docs/ARCHITECTURE.md."
+    },
+    {
+      "title": "Define design system and visual language",
+      "assignTo": "capability:design-system",
+      "description": "Establish the visual foundation: color palette, typography, spacing scale, component patterns, and brand guidelines. Document in docs/DESIGN-SYSTEM.md."
+    }
+  ]
+}

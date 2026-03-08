@@ -49,7 +49,9 @@ async function readJson(p) {
  */
 export function toPascalCase(name) {
   return name
+    .replace(/[^a-zA-Z0-9\s\-_]/g, "")
     .split(/[\s\-_]+/)
+    .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join("");
 }
@@ -184,8 +186,64 @@ export async function assembleCompany({
       }
     }
 
-    // Copy role-specific agent skills
+    // Copy agent skills.
+    //
+    // Skill resolution order (per role + skill name):
+    //   1. Role-specific override:  agents/<role>/skills/<skill>.md
+    //   2. Shared skill:            skills/<skill>.md
+    //
+    // For capabilities, the assembly logic decides what to copy:
+    //   - Primary owner gets <skill>.md (role-specific or shared)
+    //   - Fallback owners get <skill>.fallback.md (role-specific or shared)
+    //   - Other combinations are skipped
+    //
+    // Non-capability skills (no matching capabilityOwners entry) are copied
+    // as-is to the role that defines them.
+
+    const sharedSkillsDir = join(moduleDir, "skills");
     const agentsDir = join(moduleDir, "agents");
+
+    // Helper: resolve a skill file from role-specific first, then shared
+    async function resolveSkillFile(roleName, fileName) {
+      const roleSpecific = join(agentsDir, roleName, "skills", fileName);
+      if (await exists(roleSpecific)) return { path: roleSpecific, source: "role" };
+      const shared = join(sharedSkillsDir, fileName);
+      if (await exists(shared)) return { path: shared, source: "shared" };
+      return null;
+    }
+
+    // Helper: copy a resolved skill into the agent's skills/ dir
+    async function installSkill(roleName, fileName, label) {
+      const resolved = await resolveSkillFile(roleName, fileName);
+      if (!resolved) return false;
+      const destSkillsDir = join(companyDir, "agents", roleName, "skills");
+      await mkdir(destSkillsDir, { recursive: true });
+      await copyFile(resolved.path, join(destSkillsDir, fileName));
+      await appendToFile(
+        join(companyDir, "agents", roleName, "AGENTS.md"),
+        `\nRead and follow: \`$AGENT_HOME/skills/${fileName}\`\n`
+      );
+      const sourceTag = resolved.source === "shared" ? ", shared" : "";
+      onProgress(`+ agents/${roleName}/skills/${fileName} (${moduleName}, ${label}${sourceTag})`);
+      return true;
+    }
+
+    // Install capability-based skills for each present role
+    for (const [skillName, { primary, cap }] of capabilityOwners) {
+      // Primary owner gets the primary skill
+      await installSkill(primary, `${skillName}.md`, "primary");
+
+      // Fallback owners get the fallback skill
+      if (cap.fallbackSkill) {
+        for (const fallbackRole of cap.owners) {
+          if (fallbackRole === primary) continue;
+          if (!allRoles.has(fallbackRole)) continue;
+          await installSkill(fallbackRole, `${cap.fallbackSkill}.md`, "fallback");
+        }
+      }
+    }
+
+    // Install non-capability skills (role-specific only, no shared lookup)
     if (await exists(agentsDir)) {
       const roles = await readdir(agentsDir, { withFileTypes: true });
       for (const role of roles) {
@@ -195,63 +253,22 @@ export async function assembleCompany({
         const skillsDir = join(agentsDir, role.name, "skills");
         if (!(await exists(skillsDir))) continue;
 
-        const destSkillsDir = join(
-          companyDir,
-          "agents",
-          role.name,
-          "skills"
-        );
-        await mkdir(destSkillsDir, { recursive: true });
-
         const skills = await readdir(skillsDir);
         for (const skillFile of skills) {
           const skillName = skillFile.replace(/\.md$/, "");
           const skillBaseName = skillName.replace(/\.fallback$/, "");
-          const isFallbackFile = skillName.endsWith(".fallback");
-          const capInfo = capabilityOwners.get(skillBaseName);
 
-          if (capInfo) {
-            const isPrimaryOwner = capInfo.primary === role.name;
+          // Skip if this skill belongs to a capability (already handled above)
+          if (capabilityOwners.has(skillBaseName)) continue;
 
-            if (isPrimaryOwner && !isFallbackFile) {
-              await copyFile(
-                join(skillsDir, skillFile),
-                join(destSkillsDir, skillFile)
-              );
-              await appendToFile(
-                join(companyDir, "agents", role.name, "AGENTS.md"),
-                `\nRead and follow: \`$AGENT_HOME/skills/${skillFile}\`\n`
-              );
-              onProgress(
-                `+ agents/${role.name}/skills/${skillFile} (${moduleName}, primary)`
-              );
-            } else if (!isPrimaryOwner && isFallbackFile) {
-              await copyFile(
-                join(skillsDir, skillFile),
-                join(destSkillsDir, skillFile)
-              );
-              await appendToFile(
-                join(companyDir, "agents", role.name, "AGENTS.md"),
-                `\nRead and follow: \`$AGENT_HOME/skills/${skillFile}\`\n`
-              );
-              onProgress(
-                `+ agents/${role.name}/skills/${skillFile} (${moduleName}, fallback)`
-              );
-            }
-            // Other combinations: skip
-          } else {
-            await copyFile(
-              join(skillsDir, skillFile),
-              join(destSkillsDir, skillFile)
-            );
-            await appendToFile(
-              join(companyDir, "agents", role.name, "AGENTS.md"),
-              `\nRead and follow: \`$AGENT_HOME/skills/${skillFile}\`\n`
-            );
-            onProgress(
-              `+ agents/${role.name}/skills/${skillFile} (${moduleName})`
-            );
-          }
+          const destSkillsDir = join(companyDir, "agents", role.name, "skills");
+          await mkdir(destSkillsDir, { recursive: true });
+          await copyFile(join(skillsDir, skillFile), join(destSkillsDir, skillFile));
+          await appendToFile(
+            join(companyDir, "agents", role.name, "AGENTS.md"),
+            `\nRead and follow: \`$AGENT_HOME/skills/${skillFile}\`\n`
+          );
+          onProgress(`+ agents/${role.name}/skills/${skillFile} (${moduleName})`);
         }
       }
     }

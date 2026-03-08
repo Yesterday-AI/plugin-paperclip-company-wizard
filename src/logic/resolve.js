@@ -35,6 +35,58 @@ export function buildAllRoles(baseRoles, extraRoleNames) {
 }
 
 /**
+ * Build a map of module name → required module names (from `requires` field).
+ * Also computes a reverse map: module name → modules that depend on it.
+ */
+export function buildModuleDeps(modules) {
+  const requires = new Map(); // module → [deps]
+  const requiredBy = new Map(); // dep → [dependents]
+
+  for (const mod of modules) {
+    const deps = mod.requires || [];
+    requires.set(mod.name, deps);
+    for (const dep of deps) {
+      if (!requiredBy.has(dep)) requiredBy.set(dep, []);
+      requiredBy.get(dep).push(mod.name);
+    }
+  }
+
+  return { requires, requiredBy };
+}
+
+/**
+ * Given a set of selected modules, expand it to include all transitive
+ * dependencies. Returns { expanded: string[], autoSelected: string[] }.
+ */
+export function expandModuleDeps(selected, requires) {
+  const result = new Set(selected);
+  const autoSelected = [];
+  const queue = [...selected];
+
+  while (queue.length > 0) {
+    const mod = queue.shift();
+    for (const dep of requires.get(mod) || []) {
+      if (!result.has(dep)) {
+        result.add(dep);
+        autoSelected.push(dep);
+        queue.push(dep);
+      }
+    }
+  }
+
+  return { expanded: [...result], autoSelected };
+}
+
+/**
+ * Check if a module can be deselected — it cannot if any selected module
+ * depends on it. Returns the list of dependents that block deselection.
+ */
+export function getBlockingDependents(moduleName, selected, requiredBy) {
+  const dependents = requiredBy.get(moduleName) || [];
+  return dependents.filter((d) => selected.includes(d));
+}
+
+/**
  * Pretty-print a role name: "product-owner" → "Product Owner"
  */
 export function formatRoleName(role) {

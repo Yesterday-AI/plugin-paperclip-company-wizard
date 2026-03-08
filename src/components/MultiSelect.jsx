@@ -2,39 +2,73 @@ import React, { useState } from "react";
 import { Box, Text, useInput } from "ink";
 
 /**
- * Multi-select component with pre-selection support.
+ * Multi-select component with pre-selection support and dependency callbacks.
  * Space toggles, Enter confirms.
+ *
+ * Optional callbacks:
+ * - onToggleOn(value, selected) → { alsoSelect?: string[], hints?: string[] }
+ * - onToggleOff(value, selected) → { blocked: boolean, hint?: string }
  */
 export default function MultiSelect({
   items,
   preselected = [],
   onSubmit,
   label,
+  onToggleOn,
+  onToggleOff,
 }) {
   const [cursor, setCursor] = useState(0);
   const [selected, setSelected] = useState(new Set(preselected));
+  const [feedback, setFeedback] = useState(null);
 
   useInput((input, key) => {
     if (key.upArrow) {
       setCursor((c) => (c > 0 ? c - 1 : items.length - 1));
+      setFeedback(null);
     } else if (key.downArrow) {
       setCursor((c) => (c < items.length - 1 ? c + 1 : 0));
+      setFeedback(null);
     } else if (input === " ") {
       const item = items[cursor];
-      if (item) {
-        setSelected((prev) => {
-          const next = new Set(prev);
-          if (next.has(item.value)) {
-            // Don't allow deselecting pre-selected items
-            if (!preselected.includes(item.value)) {
-              next.delete(item.value);
-            }
-          } else {
-            next.add(item.value);
+      if (!item) return;
+
+      setSelected((prev) => {
+        const next = new Set(prev);
+
+        if (next.has(item.value)) {
+          // Trying to deselect
+          if (preselected.includes(item.value)) {
+            return prev; // Can't deselect preselected
           }
-          return next;
-        });
-      }
+          if (onToggleOff) {
+            const result = onToggleOff(item.value, [...next]);
+            if (result.blocked) {
+              setFeedback({ type: "warn", text: result.hint });
+              return prev;
+            }
+          }
+          next.delete(item.value);
+          setFeedback(null);
+        } else {
+          // Selecting
+          next.add(item.value);
+          if (onToggleOn) {
+            const result = onToggleOn(item.value, next);
+            if (result.alsoSelect) {
+              for (const dep of result.alsoSelect) next.add(dep);
+            }
+            if (result.hints?.length) {
+              setFeedback({
+                type: "info",
+                text: result.hints.join("; "),
+              });
+            } else {
+              setFeedback(null);
+            }
+          }
+        }
+        return next;
+      });
     } else if (key.return) {
       onSubmit([...selected]);
     }
@@ -75,6 +109,14 @@ export default function MultiSelect({
           );
         })}
       </Box>
+      {feedback ? (
+        <Box marginTop={1}>
+          <Text color={feedback.type === "warn" ? "yellow" : "cyan"}>
+            {feedback.type === "warn" ? "⚠ " : "ℹ "}
+            {feedback.text}
+          </Text>
+        </Box>
+      ) : null}
     </Box>
   );
 }

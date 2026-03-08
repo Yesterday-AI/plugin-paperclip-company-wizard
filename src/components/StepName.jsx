@@ -12,8 +12,12 @@ export default function StepName({ onComplete }) {
       setError("Name is required");
       return;
     }
-    if (!/^[a-zA-Z][a-zA-Z0-9 _-]*$/.test(trimmed)) {
-      setError("Use letters, numbers, spaces, hyphens, or underscores");
+    if (!/^[a-zA-Z]/.test(trimmed)) {
+      setError("Name must start with a letter");
+      return;
+    }
+    if (!/[a-zA-Z]/.test(trimmed.slice(1))) {
+      setError("Name must contain at least two letters");
       return;
     }
     onComplete(trimmed);

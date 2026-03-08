@@ -1,6 +1,6 @@
-# Skill: Roadmap to Issues (Primary)
+# Skill: Roadmap to Issues
 
-You own the product backlog pipeline. This is your primary responsibility.
+You own the product backlog pipeline.
 
 ## Backlog Health Check
 

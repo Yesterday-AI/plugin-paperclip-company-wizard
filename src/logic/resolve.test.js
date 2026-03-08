@@ -4,6 +4,9 @@ import {
   resolveCapabilities,
   buildAllRoles,
   formatRoleName,
+  buildModuleDeps,
+  expandModuleDeps,
+  getBlockingDependents,
 } from "./resolve.js";
 
 // --- formatRoleName ---
@@ -163,5 +166,115 @@ describe("resolveCapabilities", () => {
     const allRoles = new Set(["ceo", "engineer"]);
     const result = resolveCapabilities(modules, [], allRoles);
     assert.equal(result.length, 0);
+  });
+});
+
+// --- buildModuleDeps ---
+
+describe("buildModuleDeps", () => {
+  const modules = [
+    { name: "github-repo" },
+    { name: "pr-review", requires: ["github-repo"] },
+    { name: "architecture-plan", requires: ["tech-stack"] },
+    { name: "tech-stack" },
+    { name: "no-deps" },
+  ];
+
+  it("builds requires map from module data", () => {
+    const { requires } = buildModuleDeps(modules);
+    assert.deepEqual(requires.get("pr-review"), ["github-repo"]);
+    assert.deepEqual(requires.get("github-repo"), []);
+    assert.deepEqual(requires.get("no-deps"), []);
+  });
+
+  it("builds reverse requiredBy map", () => {
+    const { requiredBy } = buildModuleDeps(modules);
+    assert.deepEqual(requiredBy.get("github-repo"), ["pr-review"]);
+    assert.deepEqual(requiredBy.get("tech-stack"), ["architecture-plan"]);
+    assert.equal(requiredBy.has("no-deps"), false);
+  });
+});
+
+// --- expandModuleDeps ---
+
+describe("expandModuleDeps", () => {
+  const requires = new Map([
+    ["pr-review", ["github-repo"]],
+    ["github-repo", []],
+    ["architecture-plan", ["tech-stack"]],
+    ["tech-stack", []],
+    ["chain-a", ["chain-b"]],
+    ["chain-b", ["chain-c"]],
+    ["chain-c", []],
+  ]);
+
+  it("expands direct dependencies", () => {
+    const { expanded, autoSelected } = expandModuleDeps(
+      ["pr-review"],
+      requires
+    );
+    assert.ok(expanded.includes("pr-review"));
+    assert.ok(expanded.includes("github-repo"));
+    assert.deepEqual(autoSelected, ["github-repo"]);
+  });
+
+  it("expands transitive dependencies", () => {
+    const { expanded, autoSelected } = expandModuleDeps(
+      ["chain-a"],
+      requires
+    );
+    assert.ok(expanded.includes("chain-a"));
+    assert.ok(expanded.includes("chain-b"));
+    assert.ok(expanded.includes("chain-c"));
+    assert.deepEqual(autoSelected, ["chain-b", "chain-c"]);
+  });
+
+  it("does not duplicate already-selected deps", () => {
+    const { autoSelected } = expandModuleDeps(
+      ["pr-review", "github-repo"],
+      requires
+    );
+    assert.deepEqual(autoSelected, []);
+  });
+
+  it("returns empty autoSelected when no deps", () => {
+    const { autoSelected } = expandModuleDeps(["tech-stack"], requires);
+    assert.deepEqual(autoSelected, []);
+  });
+});
+
+// --- getBlockingDependents ---
+
+describe("getBlockingDependents", () => {
+  const requiredBy = new Map([
+    ["github-repo", ["pr-review"]],
+    ["tech-stack", ["architecture-plan"]],
+  ]);
+
+  it("returns dependents that are currently selected", () => {
+    const blockers = getBlockingDependents(
+      "github-repo",
+      ["pr-review", "github-repo"],
+      requiredBy
+    );
+    assert.deepEqual(blockers, ["pr-review"]);
+  });
+
+  it("returns empty when no dependents are selected", () => {
+    const blockers = getBlockingDependents(
+      "github-repo",
+      ["github-repo"],
+      requiredBy
+    );
+    assert.deepEqual(blockers, []);
+  });
+
+  it("returns empty for modules with no dependents", () => {
+    const blockers = getBlockingDependents(
+      "no-deps",
+      ["no-deps", "pr-review"],
+      requiredBy
+    );
+    assert.deepEqual(blockers, []);
   });
 });

@@ -57,10 +57,13 @@ async function setupFixtures() {
   await writeFile(join(aaDir, "agents", "ceo", "skills", "auto-assign.fallback.md"), "# auto-assign fallback\n");
   await writeFile(join(aaDir, "agents", "ceo", "skills", "auto-assign.md"), "# auto-assign primary\n");
   await writeFile(join(aaDir, "agents", "product-owner", "skills", "auto-assign.md"), "# auto-assign primary\n");
+  // Shared skill (primary, used by any owner without a role-specific override)
+  await mkdir(join(aaDir, "skills"), { recursive: true });
+  await writeFile(join(aaDir, "skills", "auto-assign.md"), "# auto-assign shared primary\n");
   await writeJson(join(aaDir, "module.json"), {
     name: "auto-assign",
     capabilities: [
-      { skill: "auto-assign", owners: ["product-owner", "ceo"] },
+      { skill: "auto-assign", owners: ["product-owner", "ceo"], fallbackSkill: "auto-assign.fallback" },
     ],
   });
 

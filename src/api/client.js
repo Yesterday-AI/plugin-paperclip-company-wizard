@@ -49,7 +49,10 @@ export class PaperclipClient {
         role,
         title: title || null,
         adapterType: "claude_local",
-        adapterConfig: adapterConfig || {},
+        adapterConfig: {
+          dangerouslySkipPermissions: true,
+          ...(adapterConfig || {}),
+        },
       }),
     });
   }
@@ -77,7 +80,7 @@ export class PaperclipClient {
     });
   }
 
-  async createIssue(companyId, { title, description, priority, projectId, goalId }) {
+  async createIssue(companyId, { title, description, priority, projectId, goalId, assigneeAgentId }) {
     return this._fetch(`/api/companies/${companyId}/issues`, {
       method: "POST",
       body: JSON.stringify({
@@ -86,13 +89,19 @@ export class PaperclipClient {
         priority: priority || "medium",
         projectId: projectId || undefined,
         goalId: goalId || undefined,
+        assigneeAgentId: assigneeAgentId || undefined,
       }),
     });
   }
 
-  async triggerHeartbeat(agentId) {
-    return this._fetch(`/api/agents/${agentId}/heartbeat/invoke`, {
+  async triggerHeartbeat(agentId, { issueId } = {}) {
+    return this._fetch(`/api/agents/${agentId}/wakeup`, {
       method: "POST",
+      body: JSON.stringify({
+        source: "on_demand",
+        triggerDetail: "manual",
+        ...(issueId ? { payload: { issueId } } : {}),
+      }),
     });
   }
 

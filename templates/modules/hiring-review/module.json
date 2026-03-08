@@ -1,0 +1,17 @@
+{
+  "name": "hiring-review",
+  "capabilities": [
+    {
+      "skill": "hiring-review",
+      "owners": ["product-owner", "ceo"],
+      "fallbackSkill": "hiring-review.fallback"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Evaluate team composition and propose new hires",
+      "assignTo": "capability:hiring-review",
+      "description": "Review the current team against the company goal and project requirements. Identify missing expertise or capacity gaps. For each proposed hire, create a board approval request with the role, justification, and suggested adapter configuration."
+    }
+  ]
+}

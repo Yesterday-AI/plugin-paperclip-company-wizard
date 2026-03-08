@@ -110,28 +110,37 @@ export async function provisionCompany({
     onProgress(`✓ ${title} agent created`);
   }
 
-  // 5. Create initial issues (linked to goal + project)
+  // 5. Create initial issues (linked to goal + project, assigned to agents)
   const issueIds = [];
+  let firstCeoIssueId = null;
   for (const task of initialTasks) {
+    const assigneeAgentId = agentIds.get(task.assignTo) || null;
     onProgress(`Creating issue: ${task.title}...`);
     const issue = await client.createIssue(companyId, {
       title: task.title,
       description: task.description,
       projectId,
       goalId,
+      assigneeAgentId,
     });
     issueIds.push(issue.id);
-    onProgress(`✓ Issue created: ${task.title}`);
+    if (task.assignTo === "ceo" && !firstCeoIssueId) {
+      firstCeoIssueId = issue.id;
+    }
+    const assignLabel = assigneeAgentId ? ` → ${task.assignTo}` : "";
+    onProgress(`✓ Issue created: ${task.title}${assignLabel}`);
   }
 
-  // 6. Optionally start CEO heartbeat
+  // 6. Optionally start CEO heartbeat (with issue context for workspace resolution)
   let ceoStarted = false;
   if (startCeo) {
     const ceoAgentId = agentIds.get("ceo");
     if (ceoAgentId) {
       onProgress("Starting CEO heartbeat...");
       try {
-        await client.triggerHeartbeat(ceoAgentId);
+        await client.triggerHeartbeat(ceoAgentId, {
+          issueId: firstCeoIssueId,
+        });
         ceoStarted = true;
         onProgress("✓ CEO heartbeat started");
       } catch (err) {

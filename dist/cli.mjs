@@ -38587,8 +38587,12 @@ function StepName({ onComplete }) {
       setError("Name is required");
       return;
     }
-    if (!/^[a-zA-Z][a-zA-Z0-9 _-]*$/.test(trimmed)) {
-      setError("Use letters, numbers, spaces, hyphens, or underscores");
+    if (!/^[a-zA-Z]/.test(trimmed)) {
+      setError("Name must start with a letter");
+      return;
+    }
+    if (!/[a-zA-Z]/.test(trimmed.slice(1))) {
+      setError("Name must contain at least two letters");
       return;
     }
     onComplete(trimmed);
@@ -39222,30 +39226,57 @@ function MultiSelect({
   items,
   preselected = [],
   onSubmit,
-  label
+  label,
+  onToggleOn,
+  onToggleOff
 }) {
   const [cursor, setCursor] = (0, import_react38.useState)(0);
   const [selected, setSelected] = (0, import_react38.useState)(new Set(preselected));
+  const [feedback, setFeedback] = (0, import_react38.useState)(null);
   use_input_default((input, key) => {
     if (key.upArrow) {
       setCursor((c) => c > 0 ? c - 1 : items.length - 1);
+      setFeedback(null);
     } else if (key.downArrow) {
       setCursor((c) => c < items.length - 1 ? c + 1 : 0);
+      setFeedback(null);
     } else if (input === " ") {
       const item = items[cursor];
-      if (item) {
-        setSelected((prev) => {
-          const next = new Set(prev);
-          if (next.has(item.value)) {
-            if (!preselected.includes(item.value)) {
-              next.delete(item.value);
-            }
-          } else {
-            next.add(item.value);
+      if (!item) return;
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(item.value)) {
+          if (preselected.includes(item.value)) {
+            return prev;
           }
-          return next;
-        });
-      }
+          if (onToggleOff) {
+            const result = onToggleOff(item.value, [...next]);
+            if (result.blocked) {
+              setFeedback({ type: "warn", text: result.hint });
+              return prev;
+            }
+          }
+          next.delete(item.value);
+          setFeedback(null);
+        } else {
+          next.add(item.value);
+          if (onToggleOn) {
+            const result = onToggleOn(item.value, next);
+            if (result.alsoSelect) {
+              for (const dep of result.alsoSelect) next.add(dep);
+            }
+            if (result.hints?.length) {
+              setFeedback({
+                type: "info",
+                text: result.hints.join("; ")
+              });
+            } else {
+              setFeedback(null);
+            }
+          }
+        }
+        return next;
+      });
     } else if (key.return) {
       onSubmit([...selected]);
     }
@@ -39279,13 +39310,86 @@ function MultiSelect({
           h
         ] }, j))
       ] }, item.value);
-    }) })
+    }) }),
+    feedback ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(Text, { color: feedback.type === "warn" ? "yellow" : "cyan", children: [
+      feedback.type === "warn" ? "\u26A0 " : "\u2139 ",
+      feedback.text
+    ] }) }) : null
   ] });
+}
+
+// src/logic/resolve.js
+function resolveCapabilities(modules, selectedModules, allRoles) {
+  const resolved = [];
+  for (const mod of modules) {
+    if (!selectedModules.includes(mod.name) || !mod.capabilities?.length)
+      continue;
+    for (const cap of mod.capabilities) {
+      const primaryOwner = cap.owners.find((r) => allRoles.has(r));
+      const fallbacks = cap.owners.filter(
+        (r) => r !== primaryOwner && allRoles.has(r)
+      );
+      if (primaryOwner) {
+        resolved.push({
+          skill: cap.skill,
+          module: mod.name,
+          primary: primaryOwner,
+          fallbacks
+        });
+      }
+    }
+  }
+  return resolved;
+}
+function buildAllRoles(baseRoles, extraRoleNames) {
+  const allRoles = new Set(baseRoles);
+  for (const role of extraRoleNames) allRoles.add(role);
+  return allRoles;
+}
+function buildModuleDeps(modules) {
+  const requires = /* @__PURE__ */ new Map();
+  const requiredBy = /* @__PURE__ */ new Map();
+  for (const mod of modules) {
+    const deps = mod.requires || [];
+    requires.set(mod.name, deps);
+    for (const dep of deps) {
+      if (!requiredBy.has(dep)) requiredBy.set(dep, []);
+      requiredBy.get(dep).push(mod.name);
+    }
+  }
+  return { requires, requiredBy };
+}
+function expandModuleDeps(selected, requires) {
+  const result = new Set(selected);
+  const autoSelected = [];
+  const queue = [...selected];
+  while (queue.length > 0) {
+    const mod = queue.shift();
+    for (const dep of requires.get(mod) || []) {
+      if (!result.has(dep)) {
+        result.add(dep);
+        autoSelected.push(dep);
+        queue.push(dep);
+      }
+    }
+  }
+  return { expanded: [...result], autoSelected };
+}
+function getBlockingDependents(moduleName, selected, requiredBy) {
+  const dependents = requiredBy.get(moduleName) || [];
+  return dependents.filter((d) => selected.includes(d));
+}
+function formatRoleName(role) {
+  return role.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
 // src/components/StepModules.jsx
 var import_jsx_runtime8 = __toESM(require_jsx_runtime(), 1);
 function StepModules({ modules, preselected, onComplete }) {
+  const { requires, requiredBy } = (0, import_react39.useMemo)(
+    () => buildModuleDeps(modules),
+    [modules]
+  );
   const items = modules.map((m) => ({
     value: m.name,
     label: m.name,
@@ -39297,6 +39401,28 @@ function StepModules({ modules, preselected, onComplete }) {
       label: "Select modules:",
       items,
       preselected,
+      onToggleOn: (value, selected) => {
+        const { autoSelected } = expandModuleDeps([value], requires);
+        const newDeps = autoSelected.filter((d) => !selected.has(d));
+        return {
+          alsoSelect: newDeps,
+          hints: newDeps.map((d) => `${value} requires ${d}, auto-selected`)
+        };
+      },
+      onToggleOff: (value, selected) => {
+        const blockers = getBlockingDependents(
+          value,
+          [...selected],
+          requiredBy
+        );
+        if (blockers.length > 0) {
+          return {
+            blocked: true,
+            hint: `Cannot deselect: required by ${blockers.join(", ")}`
+          };
+        }
+        return { blocked: false };
+      },
       onSubmit: onComplete
     }
   );
@@ -39489,7 +39615,7 @@ async function readJson(p) {
   return JSON.parse(await readFile(p, "utf-8"));
 }
 function toPascalCase(name) {
-  return name.split(/[\s\-_]+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
+  return name.replace(/[^a-zA-Z0-9\s\-_]/g, "").split(/[\s\-_]+/).filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
 }
 async function assembleCompany({
   companyName,
@@ -39588,7 +39714,41 @@ async function assembleCompany({
         }
       }
     }
+    const sharedSkillsDir = join(moduleDir, "skills");
     const agentsDir = join(moduleDir, "agents");
+    async function resolveSkillFile(roleName, fileName) {
+      const roleSpecific = join(agentsDir, roleName, "skills", fileName);
+      if (await exists(roleSpecific)) return { path: roleSpecific, source: "role" };
+      const shared = join(sharedSkillsDir, fileName);
+      if (await exists(shared)) return { path: shared, source: "shared" };
+      return null;
+    }
+    async function installSkill(roleName, fileName, label) {
+      const resolved = await resolveSkillFile(roleName, fileName);
+      if (!resolved) return false;
+      const destSkillsDir = join(companyDir, "agents", roleName, "skills");
+      await mkdir(destSkillsDir, { recursive: true });
+      await copyFile(resolved.path, join(destSkillsDir, fileName));
+      await appendToFile(
+        join(companyDir, "agents", roleName, "AGENTS.md"),
+        `
+Read and follow: \`$AGENT_HOME/skills/${fileName}\`
+`
+      );
+      const sourceTag = resolved.source === "shared" ? ", shared" : "";
+      onProgress(`+ agents/${roleName}/skills/${fileName} (${moduleName}, ${label}${sourceTag})`);
+      return true;
+    }
+    for (const [skillName, { primary, cap }] of capabilityOwners) {
+      await installSkill(primary, `${skillName}.md`, "primary");
+      if (cap.fallbackSkill) {
+        for (const fallbackRole of cap.owners) {
+          if (fallbackRole === primary) continue;
+          if (!allRoles.has(fallbackRole)) continue;
+          await installSkill(fallbackRole, `${cap.fallbackSkill}.md`, "fallback");
+        }
+      }
+    }
     if (await exists(agentsDir)) {
       const roles = await readdir(agentsDir, { withFileTypes: true });
       for (const role of roles) {
@@ -39596,65 +39756,21 @@ async function assembleCompany({
         if (!allRoles.has(role.name)) continue;
         const skillsDir = join(agentsDir, role.name, "skills");
         if (!await exists(skillsDir)) continue;
-        const destSkillsDir = join(
-          companyDir,
-          "agents",
-          role.name,
-          "skills"
-        );
-        await mkdir(destSkillsDir, { recursive: true });
         const skills = await readdir(skillsDir);
         for (const skillFile of skills) {
           const skillName = skillFile.replace(/\.md$/, "");
           const skillBaseName = skillName.replace(/\.fallback$/, "");
-          const isFallbackFile = skillName.endsWith(".fallback");
-          const capInfo = capabilityOwners.get(skillBaseName);
-          if (capInfo) {
-            const isPrimaryOwner = capInfo.primary === role.name;
-            if (isPrimaryOwner && !isFallbackFile) {
-              await copyFile(
-                join(skillsDir, skillFile),
-                join(destSkillsDir, skillFile)
-              );
-              await appendToFile(
-                join(companyDir, "agents", role.name, "AGENTS.md"),
-                `
+          if (capabilityOwners.has(skillBaseName)) continue;
+          const destSkillsDir = join(companyDir, "agents", role.name, "skills");
+          await mkdir(destSkillsDir, { recursive: true });
+          await copyFile(join(skillsDir, skillFile), join(destSkillsDir, skillFile));
+          await appendToFile(
+            join(companyDir, "agents", role.name, "AGENTS.md"),
+            `
 Read and follow: \`$AGENT_HOME/skills/${skillFile}\`
 `
-              );
-              onProgress(
-                `+ agents/${role.name}/skills/${skillFile} (${moduleName}, primary)`
-              );
-            } else if (!isPrimaryOwner && isFallbackFile) {
-              await copyFile(
-                join(skillsDir, skillFile),
-                join(destSkillsDir, skillFile)
-              );
-              await appendToFile(
-                join(companyDir, "agents", role.name, "AGENTS.md"),
-                `
-Read and follow: \`$AGENT_HOME/skills/${skillFile}\`
-`
-              );
-              onProgress(
-                `+ agents/${role.name}/skills/${skillFile} (${moduleName}, fallback)`
-              );
-            }
-          } else {
-            await copyFile(
-              join(skillsDir, skillFile),
-              join(destSkillsDir, skillFile)
-            );
-            await appendToFile(
-              join(companyDir, "agents", role.name, "AGENTS.md"),
-              `
-Read and follow: \`$AGENT_HOME/skills/${skillFile}\`
-`
-            );
-            onProgress(
-              `+ agents/${role.name}/skills/${skillFile} (${moduleName})`
-            );
-          }
+          );
+          onProgress(`+ agents/${role.name}/skills/${skillFile} (${moduleName})`);
         }
       }
     }
@@ -39900,7 +40016,10 @@ var PaperclipClient = class {
         role,
         title: title || null,
         adapterType: "claude_local",
-        adapterConfig: adapterConfig || {}
+        adapterConfig: {
+          dangerouslySkipPermissions: true,
+          ...adapterConfig || {}
+        }
       })
     });
   }
@@ -39925,7 +40044,7 @@ var PaperclipClient = class {
       })
     });
   }
-  async createIssue(companyId, { title, description, priority, projectId, goalId }) {
+  async createIssue(companyId, { title, description, priority, projectId, goalId, assigneeAgentId }) {
     return this._fetch(`/api/companies/${companyId}/issues`, {
       method: "POST",
       body: JSON.stringify({
@@ -39933,13 +40052,19 @@ var PaperclipClient = class {
         description: description || null,
         priority: priority || "medium",
         projectId: projectId || void 0,
-        goalId: goalId || void 0
+        goalId: goalId || void 0,
+        assigneeAgentId: assigneeAgentId || void 0
       })
     });
   }
-  async triggerHeartbeat(agentId) {
-    return this._fetch(`/api/agents/${agentId}/heartbeat/invoke`, {
-      method: "POST"
+  async triggerHeartbeat(agentId, { issueId } = {}) {
+    return this._fetch(`/api/agents/${agentId}/wakeup`, {
+      method: "POST",
+      body: JSON.stringify({
+        source: "on_demand",
+        triggerDetail: "manual",
+        ...issueId ? { payload: { issueId } } : {}
+      })
     });
   }
   /**
@@ -39955,40 +40080,6 @@ var PaperclipClient = class {
 
 // src/api/provision.js
 import { join as join2 } from "node:path";
-
-// src/logic/resolve.js
-function resolveCapabilities(modules, selectedModules, allRoles) {
-  const resolved = [];
-  for (const mod of modules) {
-    if (!selectedModules.includes(mod.name) || !mod.capabilities?.length)
-      continue;
-    for (const cap of mod.capabilities) {
-      const primaryOwner = cap.owners.find((r) => allRoles.has(r));
-      const fallbacks = cap.owners.filter(
-        (r) => r !== primaryOwner && allRoles.has(r)
-      );
-      if (primaryOwner) {
-        resolved.push({
-          skill: cap.skill,
-          module: mod.name,
-          primary: primaryOwner,
-          fallbacks
-        });
-      }
-    }
-  }
-  return resolved;
-}
-function buildAllRoles(baseRoles, extraRoleNames) {
-  const allRoles = new Set(baseRoles);
-  for (const role of extraRoleNames) allRoles.add(role);
-  return allRoles;
-}
-function formatRoleName(role) {
-  return role.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-}
-
-// src/api/provision.js
 async function provisionCompany({
   client,
   companyName,
@@ -40062,16 +40153,23 @@ async function provisionCompany({
     onProgress(`\u2713 ${title} agent created`);
   }
   const issueIds = [];
+  let firstCeoIssueId = null;
   for (const task of initialTasks) {
+    const assigneeAgentId = agentIds.get(task.assignTo) || null;
     onProgress(`Creating issue: ${task.title}...`);
     const issue = await client.createIssue(companyId, {
       title: task.title,
       description: task.description,
       projectId,
-      goalId
+      goalId,
+      assigneeAgentId
     });
     issueIds.push(issue.id);
-    onProgress(`\u2713 Issue created: ${task.title}`);
+    if (task.assignTo === "ceo" && !firstCeoIssueId) {
+      firstCeoIssueId = issue.id;
+    }
+    const assignLabel = assigneeAgentId ? ` \u2192 ${task.assignTo}` : "";
+    onProgress(`\u2713 Issue created: ${task.title}${assignLabel}`);
   }
   let ceoStarted = false;
   if (startCeo) {
@@ -40079,7 +40177,9 @@ async function provisionCompany({
     if (ceoAgentId) {
       onProgress("Starting CEO heartbeat...");
       try {
-        await client.triggerHeartbeat(ceoAgentId);
+        await client.triggerHeartbeat(ceoAgentId, {
+          issueId: firstCeoIssueId
+        });
         ceoStarted = true;
         onProgress("\u2713 CEO heartbeat started");
       } catch (err) {

@@ -1,0 +1,17 @@
+{
+  "name": "market-analysis",
+  "capabilities": [
+    {
+      "skill": "market-analysis",
+      "owners": ["ux-researcher", "product-owner", "ceo"],
+      "fallbackSkill": "market-analysis.fallback"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Conduct initial market analysis",
+      "assignTo": "capability:market-analysis",
+      "description": "Research the target market, identify competitors, analyze positioning opportunities, and document findings in docs/MARKET-ANALYSIS.md. This informs the product roadmap and strategic priorities."
+    }
+  ]
+}
