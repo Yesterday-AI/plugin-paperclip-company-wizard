@@ -151,6 +151,7 @@ Primary owners get the full skill. Fallback owners get a safety-net variant that
 | ------ | ----- | ------- | -------- |
 | **fast** | CEO, Engineer | github-repo, roadmap-to-issues, auto-assign, stall-detection | Solo engineer, prototypes, MVPs |
 | **quality** | CEO, Engineer, Product Owner, Code Reviewer | github-repo, pr-review, roadmap-to-issues, auto-assign, stall-detection | Teams, production systems |
+| **rad** | CEO, Engineer | tech-stack, hiring-review, github-repo, roadmap-to-issues, auto-assign, stall-detection | Rapid prototyping, iterate fast, formalize later |
 | **startup** | CEO, Engineer | vision-workshop, market-analysis, hiring-review, tech-stack, architecture-plan, github-repo, roadmap-to-issues, auto-assign, stall-detection | Strategy-first bootstrapping, grow the team organically |
 | **research** | CEO, Engineer | vision-workshop, market-analysis, tech-stack, hiring-review | Research and planning phase — no code, no repo |
 | **full** | CEO, Engineer, Product Owner, Code Reviewer | All modules | Serious projects with full planning + quality engineering |
@@ -355,6 +356,8 @@ Capability: stall-detection (CEO-only)
 **fast** — Solo engineer, direct-to-main, automated backlog. No review, no planning phase.
 
 **quality** — Full review pipeline. Product Owner manages backlog and product alignment, Code Reviewer gates code quality. Feature branches with PR workflow.
+
+**rad** — Rapid Application Development. Pick a tech stack, start building, hire when you hit bottlenecks. No upfront market research or architecture formalization — prototype first, learn from what you build, formalize later.
 
 **startup** — Strategy-first. Starts with vision, market analysis, tech evaluation, and hiring review before any code. CEO and Engineer grow the team through board approvals.
 
