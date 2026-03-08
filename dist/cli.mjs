@@ -38444,7 +38444,7 @@ var import_react27 = __toESM(require_react(), 1);
 var import_react28 = __toESM(require_react(), 1);
 
 // src/cli.jsx
-import { dirname, join as join3, resolve } from "node:path";
+import { dirname, join as join4, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // src/app.jsx
@@ -39681,6 +39681,9 @@ var PaperclipClient = class {
   }
 };
 
+// src/api/provision.js
+import { join as join2 } from "node:path";
+
 // src/logic/resolve.js
 function resolveCapabilities(modules, selectedModules, allRoles) {
   const resolved = [];
@@ -39740,7 +39743,7 @@ async function provisionCompany({
       title,
       adapterConfig: {
         cwd: companyDir,
-        instructionsFilePath: `agents/${role}/AGENTS.md`
+        instructionsFilePath: join2(companyDir, `agents/${role}/AGENTS.md`)
       }
     });
     agentIds.set(role, agent.id);
@@ -39878,7 +39881,7 @@ function StepDone({
 
 // src/logic/load-templates.js
 import { access as access2, readdir as readdir2, readFile as readFile2 } from "node:fs/promises";
-import { join as join2 } from "node:path";
+import { join as join3 } from "node:path";
 async function exists2(p) {
   try {
     await access2(p);
@@ -39892,13 +39895,13 @@ async function readJson2(p) {
   return JSON.parse(await readFile2(p, "utf-8"));
 }
 async function loadPresets(templatesDir) {
-  const presetsDir = join2(templatesDir, "presets");
+  const presetsDir = join3(templatesDir, "presets");
   const presets = [];
   if (!await exists2(presetsDir)) return presets;
   const dirs = await readdir2(presetsDir, { withFileTypes: true });
   for (const dir of dirs) {
     if (!dir.isDirectory()) continue;
-    const presetFile = join2(presetsDir, dir.name, "preset.json");
+    const presetFile = join3(presetsDir, dir.name, "preset.json");
     if (await exists2(presetFile)) {
       presets.push(JSON.parse(await readFile2(presetFile, "utf-8")));
     }
@@ -39906,14 +39909,14 @@ async function loadPresets(templatesDir) {
   return presets;
 }
 async function loadModules(templatesDir) {
-  const modulesDir = join2(templatesDir, "modules");
+  const modulesDir = join3(templatesDir, "modules");
   const modules = [];
   if (!await exists2(modulesDir)) return modules;
   const dirs = await readdir2(modulesDir, { withFileTypes: true });
   for (const dir of dirs) {
     if (!dir.isDirectory()) continue;
-    const moduleJson = await readJson2(join2(modulesDir, dir.name, "module.json"));
-    const readmePath = join2(modulesDir, dir.name, "README.md");
+    const moduleJson = await readJson2(join3(modulesDir, dir.name, "module.json"));
+    const readmePath = join3(modulesDir, dir.name, "README.md");
     let description = "";
     if (await exists2(readmePath)) {
       const content = await readFile2(readmePath, "utf-8");
@@ -39925,13 +39928,13 @@ async function loadModules(templatesDir) {
   return modules;
 }
 async function loadRoles(templatesDir) {
-  const rolesDir = join2(templatesDir, "roles");
+  const rolesDir = join3(templatesDir, "roles");
   const roles = [];
   if (!await exists2(rolesDir)) return roles;
   const dirs = await readdir2(rolesDir, { withFileTypes: true });
   for (const dir of dirs) {
     if (!dir.isDirectory()) continue;
-    const roleJson = await readJson2(join2(rolesDir, dir.name, "role.json"));
+    const roleJson = await readJson2(join3(rolesDir, dir.name, "role.json"));
     if (roleJson) {
       roles.push(roleJson);
     }
@@ -40131,11 +40134,11 @@ function App2({ outputDir, templatesDir, apiEnabled, apiBaseUrl }) {
 // src/cli.jsx
 var import_jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
 var __dirname = dirname(fileURLToPath(import.meta.url));
-var TEMPLATES_DIR = join3(__dirname, "..", "templates");
+var TEMPLATES_DIR = join4(__dirname, "..", "templates");
 function parseArgs(argv) {
   const args = argv.slice(2);
   const config2 = {
-    outputDir: join3(process.cwd(), "companies"),
+    outputDir: join4(process.cwd(), "companies"),
     apiEnabled: false,
     apiBaseUrl: "http://localhost:3100"
   };

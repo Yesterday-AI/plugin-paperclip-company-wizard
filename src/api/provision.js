@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { PaperclipClient } from "./client.js";
 import { formatRoleName } from "../logic/resolve.js";
 
@@ -44,7 +45,7 @@ export async function provisionCompany({
       title,
       adapterConfig: {
         cwd: companyDir,
-        instructionsFilePath: `agents/${role}/AGENTS.md`,
+        instructionsFilePath: join(companyDir, `agents/${role}/AGENTS.md`),
       },
     });
     agentIds.set(role, agent.id);
