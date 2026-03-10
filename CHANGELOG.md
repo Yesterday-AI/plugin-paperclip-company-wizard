@@ -2,15 +2,34 @@
 
 All notable changes to Clipper are documented here.
 
-## [0.3.5] — 2026-03-09
+## [0.3.5] — 2026-03-10
 
 ### Added
 
 - **Heartbeat injection** — Modules can now extend agent HEARTBEAT.md files with recurring tasks.
     - Convention-based: if a module provides `agents/<role>/heartbeat-section.md`, it gets injected automatically.
-    - 3 modules ship heartbeat sections: `stall-detection` (CEO), `auto-assign` (CEO + PO), `roadmap-to-issues` (CEO + PO).
+    - 3 modules ship heartbeat sections: `stall-detection` (CEO), `auto-assign` (CEO + PO), `backlog` (CEO + PO).
     - Follows the gracefully-optimistic pattern — sections adapt based on which roles are present.
 - **Dry run mode** (`--dry-run`) — Shows the resolved summary (company, preset, modules, roles, capabilities) and exits without writing files. Works in all modes: interactive wizard, headless, and AI wizard.
+- **Backlog module** — Renamed `roadmap-to-issues` → `backlog`. Module now owns the full backlog lifecycle, not just the roadmap-to-issues transformation. Capability renamed to `backlog-health`.
+    - `docs/backlog-process.md` — Full process definition: lifecycle, issue quality, sources, prioritization (P0–P3), health indicators, coordination.
+    - `docs/backlog-template.md` — Living backlog artefact template: milestone tracking, roadmap table, issue categories, backlog snapshot, decisions log.
+- **Doc reference pattern** — Established and documented a unified convention for how skills reference docs:
+    - Own templates (`lowercase.md`) → reference directly (assembly guarantees existence).
+    - Cross-module agent output (`UPPERCASE.md`) → always conditional with graceful fallback.
+    - Documented in CLAUDE.md, README.md extending section.
+
+### Fixed
+
+- **AI wizard preview box** — Right border misalignment caused by hardcoded label width. Now computes per-label visual padding with ANSI-stripped lengths.
+- **Cross-module doc references** — Audited all 14 modules. Fixed 2 non-compliant skills: `architecture-plan` (direct `TECH-STACK.md` ref) and `design-review` (direct `BRAND-IDENTITY.md` ref) now use conditional language.
+- **Base role `role.json` leaking** — `copyDir` for base roles copied `.json` files into agent directories. Added `skipExt` option to exclude them.
+
+### Changed
+
+- Preset constraint warnings shown in interactive wizard (yellow `!` text below description).
+- Module descriptions in wizard now show `activatesWithRoles` requirements. Summary warns about modules that will be skipped due to missing roles.
+- All 6 presets updated for `roadmap-to-issues` → `backlog` rename.
 
 ## [0.3.4] — 2026-03-09
 

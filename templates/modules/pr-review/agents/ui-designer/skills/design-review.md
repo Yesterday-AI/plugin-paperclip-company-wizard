@@ -4,7 +4,7 @@ You review PRs for visual quality, brand consistency, and accessibility. When a 
 
 ## Review Checklist
 
-1. **Brand consistency** — Do colors, typography, spacing, and iconography match the brand guidelines in `docs/BRAND-IDENTITY.md`?
+1. **Brand consistency** — If `docs/BRAND-IDENTITY.md` exists, check that colors, typography, spacing, and iconography match the brand guidelines. Otherwise, evaluate visual consistency based on the existing codebase patterns.
 2. **Visual hierarchy** — Is the information hierarchy clear? Do primary actions stand out? Is there visual clutter?
 3. **Layout and spacing** — Are margins, padding, and alignment consistent with the design system?
 4. **Responsive behavior** — Does the layout adapt correctly across breakpoints?

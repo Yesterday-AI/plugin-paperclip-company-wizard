@@ -230,7 +230,7 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 | :--------- | :------------ | :------- | :----- |
 | `market-analysis` | UX Researcher &rarr; CMO &rarr; Product Owner | CEO | market-analysis |
 | `hiring-review` | Product Owner | CEO | hiring-review |
-| `roadmap-to-issues` | Product Owner | CEO | roadmap-to-issues |
+| `backlog-health` | Product Owner | CEO | backlog |
 | `auto-assign` | Product Owner | CEO | auto-assign |
 | `user-testing` | QA &rarr; UX Researcher &rarr; Product Owner | CEO | user-testing |
 | `brand-identity` | UI Designer &rarr; CMO | CEO | brand-identity |
@@ -253,7 +253,7 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 
 | Preset | Modules | Best for |
 | :----- | :------ | :------- |
-| **`fast`** | github-repo, roadmap-to-issues, auto-assign, stall-detection | Solo engineer, prototypes, MVPs |
+| **`fast`** | github-repo, backlog, auto-assign, stall-detection | Solo engineer, prototypes, MVPs |
 | **`quality`** | + pr-review, + Product Owner, + Code Reviewer | Teams, production systems |
 | **`rad`** | + tech-stack, + hiring-review | Rapid prototyping, formalize later |
 | **`startup`** | + vision, market, hiring, tech, architecture | Strategy-first, grow organically |
@@ -262,7 +262,7 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 
 > **`fast`** is for a single engineer — multiple engineers without review will cause conflicts.
 >
-> **`research`** has no code workflow. Add `github-repo` and `roadmap-to-issues` when ready to build.
+> **`research`** has no code workflow. Add `github-repo` and `backlog` when ready to build.
 
 <details>
 <summary><strong>Preset details</strong></summary>
@@ -303,7 +303,7 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 | :----- | :----------- | :----------- |
 | **`github-repo`** | Git workflow and commit conventions | Engineer initializes repo |
 | **`pr-review`** | PR-based review workflow | Engineer sets up branch protection |
-| **`roadmap-to-issues`** | Auto-generate issues from goals when backlog runs low | Primary owner creates initial backlog |
+| **`backlog`** | Auto-generate issues from goals when backlog runs low | Primary owner creates initial backlog |
 | **`auto-assign`** | Assign unassigned issues to idle agents | — |
 | **`stall-detection`** | Detect stuck handovers, nudge or escalate | — |
 | **`ci-cd`** | Continuous integration and deployment pipeline | Primary owner sets up CI/CD |
@@ -365,12 +365,13 @@ PR-based review workflow. Requires `github-repo`. Activates with `code-reviewer`
 - **Task:** Engineer sets up branch protection
 - **Doc:** `docs/pr-conventions.md`
 
-#### roadmap-to-issues
+#### backlog
 
-Auto-generates issues from the roadmap when the backlog runs low.
+Owns the product backlog lifecycle — from goal decomposition to a steady pipeline of actionable issues.
 
-- **Capability:** `roadmap-to-issues` — owners: `product-owner` &rarr; `ceo`
+- **Capability:** `backlog-health` — owners: `product-owner` &rarr; `ceo`
 - **Fallback:** CEO creates 1-2 issues only when backlog is critically empty
+- **Doc:** `docs/backlog-process.md`
 
 #### auto-assign
 
@@ -517,6 +518,24 @@ templates/modules/<name>/
 ```
 
 <details>
+<summary><strong>Doc references in skills</strong></summary>
+
+Two kinds of docs end up in `{company}/docs/`:
+
+- **Templates** (`lowercase-kebab.md`) — Shipped by modules, copied at assembly time. Guaranteed to exist if the module is active.
+- **Agent output** (`UPPERCASE.md`) — Created by agents during execution. May or may not exist yet.
+
+| Reference | Rule | Example |
+| :--- | :--- | :--- |
+| Define own output | Name the path directly | "Document in `docs/TECH-STACK.md`" |
+| Read own template | Reference directly (assembly guarantees it) | "Follow conventions in `docs/pr-conventions.md`" |
+| Read cross-module output | **Always conditional** with graceful fallback | "If `docs/TECH-STACK.md` exists, review it. Otherwise, proceed based on project context." |
+
+The naming convention is the contract: `UPPERCASE.md` from another module → always wrap in "if exists". `lowercase.md` from own module → safe to reference directly.
+
+</details>
+
+<details>
 <summary><strong>module.json schema</strong></summary>
 
 ```json
@@ -623,7 +642,7 @@ templates/roles/<name>/
   "constraints": [],
   "base": "base",
   "roles": ["product-owner"],
-  "modules": ["github-repo", "roadmap-to-issues"]
+  "modules": ["github-repo", "backlog"]
 }
 ```
 

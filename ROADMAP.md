@@ -3,7 +3,7 @@
 ## Done
 
 - Shared skills system — deduplicate primary skills, role-specific overrides only when genuinely different
-- 14 modules: vision-workshop, market-analysis, hiring-review, tech-stack, architecture-plan, github-repo, pr-review, roadmap-to-issues, auto-assign, stall-detection, brand-identity, user-testing, ci-cd, monitoring
+- 14 modules: vision-workshop, market-analysis, hiring-review, tech-stack, architecture-plan, github-repo, pr-review, backlog, auto-assign, stall-detection, brand-identity, user-testing, ci-cd, monitoring
 - 9 optional roles: product-owner, code-reviewer, ui-designer, ux-researcher, cto, cmo, cfo, devops, qa
 - 6 presets: fast, quality, rad, startup, research, full
 - Template catalogue in README
@@ -26,6 +26,8 @@
 - Show preset constraints in interactive wizard — yellow warnings when a preset has limitations (e.g., "not suited for multiple engineers")
 - `activatesWithRoles` feedback — module descriptions show required roles, summary warns about modules that will be skipped
 - `--dry-run` flag — show summary and exit without writing files (works in all modes: interactive, headless, AI wizard)
+- Rename `roadmap-to-issues` → `backlog` — module now owns the full backlog lifecycle, not just the roadmap-to-issues transformation. Capability renamed to `backlog-health`. Added `docs/backlog-process.md` process definition.
+- Module process docs — modules that define workflows ship a `*-process.md` in `docs/` explaining the full process for all agents (complementing role-specific skills)
 
 ## In Progress
 

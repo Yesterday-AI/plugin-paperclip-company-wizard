@@ -1,16 +1,16 @@
 {
-  "name": "roadmap-to-issues",
+  "name": "backlog",
   "capabilities": [
     {
-      "skill": "roadmap-to-issues",
+      "skill": "backlog-health",
       "owners": ["product-owner", "ceo"],
-      "fallbackSkill": "roadmap-to-issues.fallback"
+      "fallbackSkill": "backlog-health.fallback"
     }
   ],
   "tasks": [
     {
       "title": "Create roadmap and generate initial backlog",
-      "assignTo": "capability:roadmap-to-issues",
+      "assignTo": "capability:backlog-health",
       "description": "Review the company goal, create a ROADMAP.md with milestones, then generate the first batch of actionable issues from it."
     }
   ]

@@ -7,7 +7,7 @@
   "base": "base",
   "modules": [
     "github-repo",
-    "roadmap-to-issues",
+    "backlog",
     "auto-assign",
     "stall-detection"
   ]

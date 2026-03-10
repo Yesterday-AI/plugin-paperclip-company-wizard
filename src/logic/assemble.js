@@ -18,14 +18,15 @@ async function exists(p) {
   }
 }
 
-async function copyDir(src, dest) {
+async function copyDir(src, dest, { skipExt } = {}) {
   await mkdir(dest, { recursive: true });
   const entries = await readdir(src, { withFileTypes: true });
   for (const entry of entries) {
+    if (skipExt && entry.name.endsWith(skipExt)) continue;
     const srcPath = join(src, entry.name);
     const destPath = join(dest, entry.name);
     if (entry.isDirectory()) {
-      await copyDir(srcPath, destPath);
+      await copyDir(srcPath, destPath, { skipExt });
     } else {
       await copyFile(srcPath, destPath);
     }
@@ -108,7 +109,7 @@ export async function assembleCompany({
     const entries = await readdir(roleSrc, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.isDirectory()) {
-        await copyDir(join(roleSrc, entry.name), join(roleDest, entry.name));
+        await copyDir(join(roleSrc, entry.name), join(roleDest, entry.name), { skipExt: '.json' });
       } else if (!entry.name.endsWith('.json')) {
         await copyFile(join(roleSrc, entry.name), join(roleDest, entry.name));
       }

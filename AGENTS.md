@@ -28,7 +28,7 @@ Clipper applies the same principle to organizational capabilities: **the system 
 | Core is channel-agnostic | Assembly is preset-agnostic |
 | Adapter is optional | Role is optional — base always works |
 
-A company with just CEO + Engineer works fine — the CEO handles roadmap-to-issues, auto-assign, and stall detection. Add a Product Owner, and it automatically takes over backlog management as primary owner while the CEO becomes the fallback safety net. Add a Code Reviewer, and PR review workflows activate.
+A company with just CEO + Engineer works fine — the CEO handles backlog, auto-assign, and stall detection. Add a Product Owner, and it automatically takes over backlog management as primary owner while the CEO becomes the fallback safety net. Add a Code Reviewer, and PR review workflows activate.
 
 Every company starts functional and gets better as you add roles. No capability is ever "missing" — there's always someone responsible.
 
@@ -62,7 +62,7 @@ clipper/
 │   │   ├── architecture-plan/  # System + design system architecture
 │   │   ├── github-repo/        # Git workflow
 │   │   ├── pr-review/          # PR-based code review
-│   │   ├── roadmap-to-issues/  # Backlog generation
+│   │   ├── backlog/            # Backlog lifecycle and health
 │   │   ├── auto-assign/        # Idle agent → issue matching
 │   │   ├── stall-detection/    # Stuck handover detection
 │   │   ├── brand-identity/     # Brand guidelines and visual identity
@@ -89,5 +89,5 @@ Each module contains:
 
 See [ROADMAP.md](ROADMAP.md) for the full backlog. Key areas:
 
-- **`--dry-run` flag** — Show summary and exit without writing files
 - **Excalidraw MCP integration** — Visual diagram generation as an agent skill
+- **Process docs for more modules** — `auto-assign`, `hiring-review`, and others need `*-process.md` workflow guides (backlog done)

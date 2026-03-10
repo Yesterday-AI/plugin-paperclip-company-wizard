@@ -67,8 +67,8 @@ describe('resolveCapabilities', () => {
       capabilities: [{ skill: 'pr-review', owners: ['code-reviewer', 'engineer'] }],
     },
     {
-      name: 'roadmap-to-issues',
-      capabilities: [{ skill: 'roadmap-to-issues', owners: ['product-owner', 'ceo'] }],
+      name: 'backlog',
+      capabilities: [{ skill: 'backlog-health', owners: ['product-owner', 'ceo'] }],
     },
     {
       name: 'no-caps',
@@ -128,16 +128,12 @@ describe('resolveCapabilities', () => {
 
   it('resolves multiple modules at once', () => {
     const allRoles = new Set(['ceo', 'engineer']);
-    const result = resolveCapabilities(
-      modules,
-      ['auto-assign', 'pr-review', 'roadmap-to-issues'],
-      allRoles,
-    );
+    const result = resolveCapabilities(modules, ['auto-assign', 'pr-review', 'backlog'], allRoles);
     assert.equal(result.length, 3);
     const skills = result.map((r) => r.skill);
     assert.ok(skills.includes('auto-assign'));
     assert.ok(skills.includes('pr-review'));
-    assert.ok(skills.includes('roadmap-to-issues'));
+    assert.ok(skills.includes('backlog-health'));
   });
 
   it('returns empty array when no modules selected', () => {

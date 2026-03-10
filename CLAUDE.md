@@ -76,11 +76,28 @@ For a capability's primary skill, assembly checks two locations in order:
 
 This avoids duplicating identical skill files across roles. Most capabilities use a single shared primary skill. Role-specific overrides exist only when a role brings a genuinely different approach (e.g., UX Researcher does user-focused market analysis). Fallback variants are always role-specific.
 
+### Doc References in Skills
+
+Two kinds of docs live in `{company}/docs/`:
+
+- **Templates** (`lowercase-kebab.md`) — Shipped by modules, copied at assembly time. Guaranteed to exist if the module is active. Skills may reference these directly.
+- **Agent output** (`UPPERCASE.md`) — Created by agents during execution. May or may not exist yet.
+
+Three patterns for referencing docs from skills:
+
+| Reference | Rule | Example |
+| :--- | :--- | :--- |
+| Define own output | Name the path directly | "Document in `docs/TECH-STACK.md`" |
+| Read own template | Reference directly (assembly guarantees it) | "Follow conventions in `docs/pr-conventions.md`" |
+| Read cross-module output | **Always conditional** with graceful fallback | "If `docs/TECH-STACK.md` exists, review it. Otherwise, proceed based on project context." |
+
+The naming convention is the contract: `UPPERCASE.md` from another module → always wrap in "if exists". `lowercase.md` from own module → safe to reference directly.
+
 ### Heartbeat Injection
 
 Convention-based: if a module provides `agents/<role>/heartbeat-section.md`, assembly injects it into that role's HEARTBEAT.md before the `<!-- Module-specific ... -->` marker comment. Multiple modules can inject into the same role — sections are appended in module order. Follows the same gracefully-optimistic pattern as skills: file exists → heartbeat extends, file absent → nothing breaks.
 
-Currently 3 modules have heartbeat sections: `stall-detection` (CEO), `auto-assign` (CEO fallback + PO primary), `roadmap-to-issues` (CEO fallback + PO primary).
+Currently 3 modules have heartbeat sections: `stall-detection` (CEO), `auto-assign` (CEO fallback + PO primary), `backlog` (CEO fallback + PO primary).
 
 ### Key Concepts
 
