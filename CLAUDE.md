@@ -39,7 +39,7 @@ node dist/cli.mjs --ai "A fintech startup building a payment API, focus on secur
 - `src/logic/assemble.js` — File assembly: copies templates, resolves capabilities, generates BOOTSTRAP.md
 - `src/logic/resolve.js` — Capability resolution, role formatting
 - `src/logic/load-templates.js` — Loads presets, modules, roles from templates/
-- `src/api/client.js` — Paperclip REST API client (localhost:3100, no auth in local_trusted mode)
+- `src/api/client.js` — Paperclip REST API client (auto-detects auth: no-op for local_trusted, Better Auth sign-in for authenticated instances)
 - `src/api/provision.js` — Orchestrates API provisioning: Company → Goal → Project → Agents → Issues → CEO heartbeat
 
 ### Template System

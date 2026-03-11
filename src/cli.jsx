@@ -32,6 +32,9 @@ const HELP = `
     --output <dir>             Output directory (default: ./companies/)
     --api                      Provision via Paperclip API after assembly
     --api-url <url>            Paperclip API URL (default: http://localhost:3100)
+    --api-email <email>        Board login email (or PAPERCLIP_EMAIL env var)
+    --api-password <pass>      Board login password (or PAPERCLIP_PASSWORD env var)
+    --api-workspace-root <p>   Workspace root as seen by the API server (Docker mount path)
     --model <model>            LLM model for agents (default: adapter default)
     --start                    Start CEO heartbeat after provisioning (implies --api)
 
@@ -57,6 +60,8 @@ const HELP = `
 
   Environment:
     ANTHROPIC_API_KEY            Required for --ai mode
+    PAPERCLIP_EMAIL              Board login email (for authenticated instances)
+    PAPERCLIP_PASSWORD           Board login password (for authenticated instances)
 
   -h, --help                   Show this help
 `;
@@ -69,6 +74,9 @@ function parseArgs(argv) {
     dryRun: false,
     apiEnabled: false,
     apiBaseUrl: 'http://localhost:3100',
+    apiEmail: process.env.PAPERCLIP_EMAIL || null,
+    apiPassword: process.env.PAPERCLIP_PASSWORD || null,
+    apiWorkspaceRoot: null,
     model: null,
     startCeo: false,
     // AI wizard
@@ -104,6 +112,18 @@ function parseArgs(argv) {
       case '--api-url':
         config.apiBaseUrl = next;
         config.apiEnabled = true;
+        i++;
+        break;
+      case '--api-email':
+        config.apiEmail = next;
+        i++;
+        break;
+      case '--api-password':
+        config.apiPassword = next;
+        i++;
+        break;
+      case '--api-workspace-root':
+        config.apiWorkspaceRoot = next;
         i++;
         break;
       case '--start':
@@ -285,6 +305,9 @@ if (config.aiDescription !== null) {
       dryRun={config.dryRun}
       apiEnabled={config.apiEnabled}
       apiBaseUrl={config.apiBaseUrl}
+      apiEmail={config.apiEmail}
+      apiPassword={config.apiPassword}
+      apiWorkspaceRoot={config.apiWorkspaceRoot}
       model={config.model}
       startCeo={config.startCeo}
       // Pass pre-filled values from flags

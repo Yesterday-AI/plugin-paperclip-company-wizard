@@ -5,19 +5,27 @@ const BASE_ROLE_MAP = {
 
 /**
  * Minimal Paperclip API client using native fetch.
- * Designed for local instances (no auth required in local_implicit mode).
+ * Supports both local_trusted (no auth) and authenticated instances.
+ *
+ * Usage:
+ *   const client = new PaperclipClient('http://localhost:3100', { email, password });
+ *   await client.connect(); // auto-detects auth requirement, signs in if needed
  */
 export class PaperclipClient {
-  constructor(baseUrl = 'http://localhost:3100') {
+  constructor(baseUrl = 'http://localhost:3100', credentials = {}) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
+    this.origin = new URL(this.baseUrl).origin;
+    this.credentials = credentials; // { email, password } — optional
+    this.sessionCookie = null;
   }
 
   async _fetch(path, opts = {}) {
     const url = `${this.baseUrl}${path}`;
-    const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...opts.headers },
-      ...opts,
-    });
+    const headers = { 'Content-Type': 'application/json', Origin: this.origin, ...opts.headers };
+    if (this.sessionCookie) {
+      headers['Cookie'] = this.sessionCookie;
+    }
+    const res = await fetch(url, { ...opts, headers });
     if (!res.ok) {
       const body = await res.text().catch(() => '');
       throw new Error(`${opts.method || 'GET'} ${path} → ${res.status}: ${body}`);
@@ -25,10 +33,81 @@ export class PaperclipClient {
     return res.json();
   }
 
+  /**
+   * Connect to the Paperclip instance.
+   * Pings the API — if auth is required and credentials are available, signs in.
+   * For local_trusted instances this is a no-op beyond the connectivity check.
+   */
+  async connect() {
+    const res = await fetch(`${this.baseUrl}/api/companies`, {
+      method: 'GET',
+      headers: { Origin: this.origin },
+    });
+
+    // local_trusted — no auth needed
+    if (res.ok) return;
+
+    // Auth required
+    if (res.status === 401 || res.status === 403) {
+      const { email, password } = this.credentials;
+      if (!email || !password) {
+        throw new Error(
+          `Paperclip instance requires authentication.\n` +
+            `  Set PAPERCLIP_EMAIL and PAPERCLIP_PASSWORD env vars,\n` +
+            `  or pass --api-email and --api-password.`,
+        );
+      }
+      await this._signIn(email, password);
+      return;
+    }
+
+    throw new Error(`Paperclip API unreachable (${res.status})`);
+  }
+
+  /**
+   * Authenticate via Better Auth email/password sign-in.
+   * Captures the session cookie for subsequent requests.
+   */
+  async _signIn(email, password) {
+    const res = await fetch(`${this.baseUrl}/api/auth/sign-in/email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: this.origin },
+      body: JSON.stringify({ email, password }),
+      redirect: 'manual',
+    });
+
+    if (!res.ok && res.status !== 302) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Authentication failed (${res.status}): ${body}`);
+    }
+
+    // Capture set-cookie header(s)
+    const setCookie = res.headers.getSetCookie?.() || [];
+    if (setCookie.length === 0) {
+      // Fallback: some runtimes use get('set-cookie')
+      const raw = res.headers.get('set-cookie');
+      if (raw) setCookie.push(...raw.split(/,(?=\s*\w+=)/));
+    }
+
+    this.sessionCookie = setCookie
+      .map((c) => c.split(';')[0].trim())
+      .filter(Boolean)
+      .join('; ');
+
+    if (!this.sessionCookie) {
+      throw new Error('Authentication succeeded but no session cookie received.');
+    }
+  }
+
   async ping() {
     try {
-      await fetch(`${this.baseUrl}/api/companies`, { method: 'GET' });
-      return true;
+      const headers = { Origin: this.origin };
+      if (this.sessionCookie) headers['Cookie'] = this.sessionCookie;
+      const res = await fetch(`${this.baseUrl}/api/companies`, {
+        method: 'GET',
+        headers,
+      });
+      return res.ok;
     } catch {
       return false;
     }

@@ -38444,7 +38444,7 @@ var import_react27 = __toESM(require_react(), 1);
 var import_react28 = __toESM(require_react(), 1);
 
 // src/cli.jsx
-import { dirname, join as join5, resolve } from "node:path";
+import { dirname, join as join7, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // src/app.jsx
@@ -40022,6 +40022,7 @@ function StepAssemble({
 
 // src/components/StepProvision.jsx
 var import_react44 = __toESM(require_react(), 1);
+import { join as join3, basename } from "node:path";
 
 // src/api/client.js
 var BASE_ROLE_MAP = {
@@ -40029,25 +40030,84 @@ var BASE_ROLE_MAP = {
   engineer: "engineer"
 };
 var PaperclipClient = class {
-  constructor(baseUrl = "http://localhost:3100") {
+  constructor(baseUrl = "http://localhost:3100", credentials = {}) {
     this.baseUrl = baseUrl.replace(/\/$/, "");
+    this.origin = new URL(this.baseUrl).origin;
+    this.credentials = credentials;
+    this.sessionCookie = null;
   }
   async _fetch(path, opts = {}) {
     const url = `${this.baseUrl}${path}`;
-    const res = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...opts.headers },
-      ...opts
-    });
+    const headers = { "Content-Type": "application/json", Origin: this.origin, ...opts.headers };
+    if (this.sessionCookie) {
+      headers["Cookie"] = this.sessionCookie;
+    }
+    const res = await fetch(url, { ...opts, headers });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
       throw new Error(`${opts.method || "GET"} ${path} \u2192 ${res.status}: ${body}`);
     }
     return res.json();
   }
+  /**
+   * Connect to the Paperclip instance.
+   * Pings the API — if auth is required and credentials are available, signs in.
+   * For local_trusted instances this is a no-op beyond the connectivity check.
+   */
+  async connect() {
+    const res = await fetch(`${this.baseUrl}/api/companies`, {
+      method: "GET",
+      headers: { Origin: this.origin }
+    });
+    if (res.ok) return;
+    if (res.status === 401 || res.status === 403) {
+      const { email, password } = this.credentials;
+      if (!email || !password) {
+        throw new Error(
+          `Paperclip instance requires authentication.
+  Set PAPERCLIP_EMAIL and PAPERCLIP_PASSWORD env vars,
+  or pass --api-email and --api-password.`
+        );
+      }
+      await this._signIn(email, password);
+      return;
+    }
+    throw new Error(`Paperclip API unreachable (${res.status})`);
+  }
+  /**
+   * Authenticate via Better Auth email/password sign-in.
+   * Captures the session cookie for subsequent requests.
+   */
+  async _signIn(email, password) {
+    const res = await fetch(`${this.baseUrl}/api/auth/sign-in/email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: this.origin },
+      body: JSON.stringify({ email, password }),
+      redirect: "manual"
+    });
+    if (!res.ok && res.status !== 302) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Authentication failed (${res.status}): ${body}`);
+    }
+    const setCookie = res.headers.getSetCookie?.() || [];
+    if (setCookie.length === 0) {
+      const raw = res.headers.get("set-cookie");
+      if (raw) setCookie.push(...raw.split(/,(?=\s*\w+=)/));
+    }
+    this.sessionCookie = setCookie.map((c) => c.split(";")[0].trim()).filter(Boolean).join("; ");
+    if (!this.sessionCookie) {
+      throw new Error("Authentication succeeded but no session cookie received.");
+    }
+  }
   async ping() {
     try {
-      await fetch(`${this.baseUrl}/api/companies`, { method: "GET" });
-      return true;
+      const headers = { Origin: this.origin };
+      if (this.sessionCookie) headers["Cookie"] = this.sessionCookie;
+      const res = await fetch(`${this.baseUrl}/api/companies`, {
+        method: "GET",
+        headers
+      });
+      return res.ok;
     } catch {
       return false;
     }
@@ -40143,10 +40203,12 @@ async function provisionCompany({
   rolesData = /* @__PURE__ */ new Map(),
   initialTasks = [],
   model = null,
+  remoteCompanyDir = null,
   startCeo = false,
   onProgress = () => {
   }
 }) {
+  const apiCompanyDir = remoteCompanyDir || companyDir;
   onProgress("Creating company...");
   const company = await client.createCompany({ name: companyName });
   const companyId = company.id;
@@ -40162,7 +40224,7 @@ async function provisionCompany({
     goalId = g.id;
     onProgress(`\u2713 Goal created: ${goal.title}`);
   }
-  const projectCwd = join2(companyDir, "projects", toPascalCase(projectName));
+  const projectCwd = join2(apiCompanyDir, "projects", toPascalCase(projectName));
   onProgress(`Creating project "${projectName}"...`);
   const project = await client.createProject(companyId, {
     name: projectName,
@@ -40196,8 +40258,8 @@ async function provisionCompany({
       title,
       reportsTo: reportsToAgentId,
       adapterConfig: {
-        cwd: companyDir,
-        instructionsFilePath: join2(companyDir, `agents/${role}/AGENTS.md`),
+        cwd: apiCompanyDir,
+        instructionsFilePath: join2(apiCompanyDir, `agents/${role}/AGENTS.md`),
         ...agentModel ? { model: agentModel } : {},
         ...Object.fromEntries(Object.entries(roleAdapter).filter(([k]) => k !== "model"))
       }
@@ -40262,6 +40324,9 @@ function StepProvision({
   rolesData,
   initialTasks,
   apiBaseUrl,
+  apiEmail,
+  apiPassword,
+  apiWorkspaceRoot,
   model,
   startCeo,
   onComplete,
@@ -40271,8 +40336,11 @@ function StepProvision({
   const [done, setDone] = (0, import_react44.useState)(false);
   (0, import_react44.useEffect)(() => {
     let cancelled = false;
-    const client = new PaperclipClient(apiBaseUrl);
-    provisionCompany({
+    const client = new PaperclipClient(apiBaseUrl, {
+      email: apiEmail,
+      password: apiPassword
+    });
+    client.connect().then(() => provisionCompany({
       client,
       companyName,
       companyDir,
@@ -40284,13 +40352,14 @@ function StepProvision({
       rolesData,
       initialTasks,
       model,
+      remoteCompanyDir: apiWorkspaceRoot ? join3(apiWorkspaceRoot, basename(companyDir)) : null,
       startCeo,
       onProgress: (line) => {
         if (!cancelled) {
           setLog((prev) => [...prev, line]);
         }
       }
-    }).then((result) => {
+    })).then((result) => {
       if (!cancelled) {
         setDone(true);
         onComplete(result);
@@ -40388,7 +40457,7 @@ function StepDone({ companyDir, allRoles, provisioned, provisionResult }) {
 
 // src/logic/load-templates.js
 import { access as access2, readdir as readdir2, readFile as readFile2 } from "node:fs/promises";
-import { join as join3 } from "node:path";
+import { join as join4 } from "node:path";
 async function exists2(p) {
   try {
     await access2(p);
@@ -40402,13 +40471,13 @@ async function readJson2(p) {
   return JSON.parse(await readFile2(p, "utf-8"));
 }
 async function loadPresets(templatesDir) {
-  const presetsDir = join3(templatesDir, "presets");
+  const presetsDir = join4(templatesDir, "presets");
   const presets = [];
   if (!await exists2(presetsDir)) return presets;
   const dirs = await readdir2(presetsDir, { withFileTypes: true });
   for (const dir of dirs) {
     if (!dir.isDirectory()) continue;
-    const presetFile = join3(presetsDir, dir.name, "preset.json");
+    const presetFile = join4(presetsDir, dir.name, "preset.json");
     if (await exists2(presetFile)) {
       presets.push(JSON.parse(await readFile2(presetFile, "utf-8")));
     }
@@ -40416,14 +40485,14 @@ async function loadPresets(templatesDir) {
   return presets;
 }
 async function loadModules(templatesDir) {
-  const modulesDir = join3(templatesDir, "modules");
+  const modulesDir = join4(templatesDir, "modules");
   const modules = [];
   if (!await exists2(modulesDir)) return modules;
   const dirs = await readdir2(modulesDir, { withFileTypes: true });
   for (const dir of dirs) {
     if (!dir.isDirectory()) continue;
-    const moduleJson = await readJson2(join3(modulesDir, dir.name, "module.json"));
-    const readmePath = join3(modulesDir, dir.name, "README.md");
+    const moduleJson = await readJson2(join4(modulesDir, dir.name, "module.json"));
+    const readmePath = join4(modulesDir, dir.name, "README.md");
     let description = "";
     if (await exists2(readmePath)) {
       const content = await readFile2(readmePath, "utf-8");
@@ -40436,23 +40505,23 @@ async function loadModules(templatesDir) {
 }
 async function loadRoles(templatesDir) {
   const roles = [];
-  const baseDir = join3(templatesDir, "base");
+  const baseDir = join4(templatesDir, "base");
   if (await exists2(baseDir)) {
     const baseDirs = await readdir2(baseDir, { withFileTypes: true });
     for (const dir of baseDirs) {
       if (!dir.isDirectory()) continue;
-      const roleJson = await readJson2(join3(baseDir, dir.name, "role.json"));
+      const roleJson = await readJson2(join4(baseDir, dir.name, "role.json"));
       if (roleJson) {
         roles.push({ ...roleJson, _base: true });
       }
     }
   }
-  const rolesDir = join3(templatesDir, "roles");
+  const rolesDir = join4(templatesDir, "roles");
   if (await exists2(rolesDir)) {
     const dirs = await readdir2(rolesDir, { withFileTypes: true });
     for (const dir of dirs) {
       if (!dir.isDirectory()) continue;
-      const roleJson = await readJson2(join3(rolesDir, dir.name, "role.json"));
+      const roleJson = await readJson2(join4(rolesDir, dir.name, "role.json"));
       if (roleJson) {
         roles.push(roleJson);
       }
@@ -40483,6 +40552,9 @@ function App2({
   dryRun,
   apiEnabled,
   apiBaseUrl,
+  apiEmail,
+  apiPassword,
+  apiWorkspaceRoot,
   model,
   startCeo,
   // Pre-filled values from CLI flags (partial non-interactive)
@@ -40753,6 +40825,9 @@ function App2({
         rolesData,
         initialTasks: assemblyResult.initialTasks,
         apiBaseUrl,
+        apiEmail,
+        apiPassword,
+        apiWorkspaceRoot,
         model,
         startCeo,
         onComplete: (result) => {
@@ -40788,6 +40863,7 @@ function App2({
 }
 
 // src/headless.js
+import { join as join5, basename as basename2 } from "node:path";
 async function runHeadless(opts) {
   const log = (msg) => console.log(msg);
   const [presets, modules, allAvailableRoles] = await Promise.all([
@@ -40877,7 +40953,11 @@ async function runHeadless(opts) {
   if (opts.apiEnabled) {
     log("");
     log("Provisioning via Paperclip API...");
-    const client = new PaperclipClient(opts.apiBaseUrl);
+    const client = new PaperclipClient(opts.apiBaseUrl, {
+      email: opts.apiEmail,
+      password: opts.apiPassword
+    });
+    await client.connect();
     const provisionResult = await provisionCompany({
       client,
       companyName: opts.name,
@@ -40890,6 +40970,7 @@ async function runHeadless(opts) {
       rolesData,
       initialTasks: assemblyResult.initialTasks,
       model: opts.model,
+      remoteCompanyDir: opts.apiWorkspaceRoot ? join5(opts.apiWorkspaceRoot, basename2(assemblyResult.companyDir)) : null,
       startCeo: opts.startCeo,
       onProgress: (line) => log(`  ${line}`)
     });
@@ -40918,13 +40999,13 @@ async function runHeadless(opts) {
 
 // src/logic/ai-wizard.js
 import { readFileSync as readFileSync2 } from "node:fs";
-import { join as join4 } from "node:path";
+import { join as join6 } from "node:path";
 import { createInterface } from "node:readline";
 function loadPromptFile(templatesDir, filename) {
-  return readFileSync2(join4(templatesDir, "ai-wizard", filename), "utf-8").trim();
+  return readFileSync2(join6(templatesDir, "ai-wizard", filename), "utf-8").trim();
 }
 function loadMessages(templatesDir) {
-  return JSON.parse(readFileSync2(join4(templatesDir, "ai-wizard", "messages.json"), "utf-8"));
+  return JSON.parse(readFileSync2(join6(templatesDir, "ai-wizard", "messages.json"), "utf-8"));
 }
 function renderTemplate(template, vars) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? "");
@@ -41350,7 +41431,7 @@ ${loadPromptFile(opts.templatesDir, "config-format.md")}`
 // src/cli.jsx
 var import_jsx_runtime15 = __toESM(require_jsx_runtime(), 1);
 var __dirname = dirname(fileURLToPath(import.meta.url));
-var TEMPLATES_DIR = join5(__dirname, "..", "templates");
+var TEMPLATES_DIR = join7(__dirname, "..", "templates");
 var HELP = `
   Clipper \u2014 Bootstrap a Paperclip company workspace
 
@@ -41373,6 +41454,9 @@ var HELP = `
     --output <dir>             Output directory (default: ./companies/)
     --api                      Provision via Paperclip API after assembly
     --api-url <url>            Paperclip API URL (default: http://localhost:3100)
+    --api-email <email>        Board login email (or PAPERCLIP_EMAIL env var)
+    --api-password <pass>      Board login password (or PAPERCLIP_PASSWORD env var)
+    --api-workspace-root <p>   Workspace root as seen by the API server (Docker mount path)
     --model <model>            LLM model for agents (default: adapter default)
     --start                    Start CEO heartbeat after provisioning (implies --api)
 
@@ -41398,16 +41482,21 @@ var HELP = `
 
   Environment:
     ANTHROPIC_API_KEY            Required for --ai mode
+    PAPERCLIP_EMAIL              Board login email (for authenticated instances)
+    PAPERCLIP_PASSWORD           Board login password (for authenticated instances)
 
   -h, --help                   Show this help
 `;
 function parseArgs(argv) {
   const args = argv.slice(2);
   const config2 = {
-    outputDir: join5(process.cwd(), "companies"),
+    outputDir: join7(process.cwd(), "companies"),
     dryRun: false,
     apiEnabled: false,
     apiBaseUrl: "http://localhost:3100",
+    apiEmail: process.env.PAPERCLIP_EMAIL || null,
+    apiPassword: process.env.PAPERCLIP_PASSWORD || null,
+    apiWorkspaceRoot: null,
     model: null,
     startCeo: false,
     // AI wizard
@@ -41441,6 +41530,18 @@ function parseArgs(argv) {
       case "--api-url":
         config2.apiBaseUrl = next;
         config2.apiEnabled = true;
+        i++;
+        break;
+      case "--api-email":
+        config2.apiEmail = next;
+        i++;
+        break;
+      case "--api-password":
+        config2.apiPassword = next;
+        i++;
+        break;
+      case "--api-workspace-root":
+        config2.apiWorkspaceRoot = next;
         i++;
         break;
       case "--start":
@@ -41599,6 +41700,9 @@ if (config.aiDescription !== null) {
         dryRun: config.dryRun,
         apiEnabled: config.apiEnabled,
         apiBaseUrl: config.apiBaseUrl,
+        apiEmail: config.apiEmail,
+        apiPassword: config.apiPassword,
+        apiWorkspaceRoot: config.apiWorkspaceRoot,
         model: config.model,
         startCeo: config.startCeo,
         initialName: config.name,

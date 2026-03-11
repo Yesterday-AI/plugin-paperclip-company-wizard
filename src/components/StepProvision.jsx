@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { join, basename } from 'node:path';
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import { PaperclipClient } from '../api/client.js';
@@ -13,6 +14,9 @@ export default function StepProvision({
   rolesData,
   initialTasks,
   apiBaseUrl,
+  apiEmail,
+  apiPassword,
+  apiWorkspaceRoot,
   model,
   startCeo,
   onComplete,
@@ -23,27 +27,35 @@ export default function StepProvision({
 
   useEffect(() => {
     let cancelled = false;
-    const client = new PaperclipClient(apiBaseUrl);
+    const client = new PaperclipClient(apiBaseUrl, {
+      email: apiEmail,
+      password: apiPassword,
+    });
 
-    provisionCompany({
-      client,
-      companyName,
-      companyDir,
-      goal,
-      projectName: project?.name || companyName,
-      projectDescription: project?.description,
-      repoUrl: project?.repoUrl,
-      allRoles,
-      rolesData,
-      initialTasks,
-      model,
-      startCeo,
-      onProgress: (line) => {
-        if (!cancelled) {
-          setLog((prev) => [...prev, line]);
-        }
-      },
-    })
+    client
+      .connect()
+      .then(() =>
+        provisionCompany({
+          client,
+          companyName,
+          companyDir,
+          goal,
+          projectName: project?.name || companyName,
+          projectDescription: project?.description,
+          repoUrl: project?.repoUrl,
+          allRoles,
+          rolesData,
+          initialTasks,
+          model,
+          remoteCompanyDir: apiWorkspaceRoot ? join(apiWorkspaceRoot, basename(companyDir)) : null,
+          startCeo,
+          onProgress: (line) => {
+            if (!cancelled) {
+              setLog((prev) => [...prev, line]);
+            }
+          },
+        }),
+      )
       .then((result) => {
         if (!cancelled) {
           setDone(true);

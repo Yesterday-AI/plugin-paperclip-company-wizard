@@ -120,6 +120,9 @@ $ clipper --api
 | `--dry-run` | Show summary and exit without writing files | off |
 | `--api` | Provision via Paperclip API after file assembly | off |
 | `--api-url <url>` | Paperclip API URL (implies `--api`) | `http://localhost:3100` |
+| `--api-email <email>` | Board login email (for authenticated instances) | `PAPERCLIP_EMAIL` env var |
+| `--api-password <pass>` | Board login password | `PAPERCLIP_PASSWORD` env var |
+| `--api-workspace-root <path>` | Workspace root as seen by the API server (for Docker) | local path |
 | `--model <model>` | Default LLM model for all agents | adapter default |
 | `--start` | Start CEO heartbeat after provisioning (implies `--api`) | off |
 | `--ai` | AI interview: 3 guided questions, then auto-config | — |
@@ -485,7 +488,30 @@ Owns test strategy, test automation, quality gates, and regression prevention. P
 
 ### With `--api` (recommended)
 
-Clipper provisions everything in the local Paperclip instance automatically:
+For `local_trusted` instances, `--api` works without credentials. For authenticated instances, provide board login credentials via env vars or flags:
+
+```sh
+# Env vars (set once)
+export PAPERCLIP_EMAIL="you@example.com"
+export PAPERCLIP_PASSWORD="yourpassword"
+clipper --name "Acme" --preset fast --api
+
+# Or inline flags
+clipper --name "Acme" --preset fast --api \
+  --api-email you@example.com --api-password yourpassword
+```
+
+Clipper auto-detects whether authentication is needed — no configuration change required for `local_trusted` instances.
+
+For Docker deployments where the workspace is mounted at a different path, use `--api-workspace-root` to remap paths:
+
+```sh
+# Local: companies/ is mounted into Docker at /data/companies/
+clipper --name "Acme" --preset fast --api \
+  --api-workspace-root /data/companies
+```
+
+Clipper provisions everything in the Paperclip instance automatically:
 
 1. **Company** — created with the name you entered
 2. **Goal** — company-level goal, set to `active`

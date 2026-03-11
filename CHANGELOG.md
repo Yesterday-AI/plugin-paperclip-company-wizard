@@ -2,6 +2,18 @@
 
 All notable changes to Clipper are documented here.
 
+## [0.3.6] — 2026-03-11
+
+### Added
+
+- **Authenticated instance support** — `PaperclipClient` now auto-detects whether the Paperclip instance requires authentication. For `local_trusted` instances, nothing changes. For authenticated instances, Clipper signs in via Better Auth using board credentials.
+    - `--api-email` / `--api-password` flags (or `PAPERCLIP_EMAIL` / `PAPERCLIP_PASSWORD` env vars).
+    - `connect()` method probes the API, signs in if needed, and attaches the session cookie to all subsequent requests.
+    - `Origin` header sent on all API requests (required by Better Auth and Paperclip's board mutation guard).
+- **Docker workspace path remapping** (`--api-workspace-root`) — When Paperclip runs in Docker, local filesystem paths don't match the container's mount paths. This flag remaps all API-facing paths (agent `cwd`, `instructionsFilePath`, project workspace) to the Docker-side root.
+    - Uses the actual assembled directory name (handles collision suffixes like `Minetris2` correctly).
+    - Local file assembly is unaffected — only paths sent to the API are remapped.
+
 ## [0.3.5] — 2026-03-10
 
 ### Added

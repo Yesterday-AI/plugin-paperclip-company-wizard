@@ -25,6 +25,7 @@ import { toPascalCase } from '../logic/assemble.js';
  * @param {Map<string, object>} opts.rolesData - role name → role.json data
  * @param {Array} opts.initialTasks
  * @param {string|null} opts.model - LLM model fallback (overridden by role.json adapter.model)
+ * @param {string|null} opts.remoteCompanyDir - override companyDir for API paths (Docker mount path)
  * @param {boolean} opts.startCeo - trigger CEO heartbeat after provisioning
  * @param {(line: string) => void} opts.onProgress
  */
@@ -40,9 +41,12 @@ export async function provisionCompany({
   rolesData = new Map(),
   initialTasks = [],
   model = null,
+  remoteCompanyDir = null,
   startCeo = false,
   onProgress = () => {},
 }) {
+  // API paths: use remoteCompanyDir (Docker) if set, otherwise local companyDir
+  const apiCompanyDir = remoteCompanyDir || companyDir;
   // 1. Create company
   onProgress('Creating company...');
   const company = await client.createCompany({ name: companyName });
@@ -63,7 +67,7 @@ export async function provisionCompany({
   }
 
   // 3. Create project with workspace
-  const projectCwd = join(companyDir, 'projects', toPascalCase(projectName));
+  const projectCwd = join(apiCompanyDir, 'projects', toPascalCase(projectName));
   onProgress(`Creating project "${projectName}"...`);
   const project = await client.createProject(companyId, {
     name: projectName,
@@ -107,8 +111,8 @@ export async function provisionCompany({
       title,
       reportsTo: reportsToAgentId,
       adapterConfig: {
-        cwd: companyDir,
-        instructionsFilePath: join(companyDir, `agents/${role}/AGENTS.md`),
+        cwd: apiCompanyDir,
+        instructionsFilePath: join(apiCompanyDir, `agents/${role}/AGENTS.md`),
         ...(agentModel ? { model: agentModel } : {}),
         ...Object.fromEntries(Object.entries(roleAdapter).filter(([k]) => k !== 'model')),
       },

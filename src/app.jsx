@@ -37,6 +37,9 @@ export default function App({
   dryRun,
   apiEnabled,
   apiBaseUrl,
+  apiEmail,
+  apiPassword,
+  apiWorkspaceRoot,
   model,
   startCeo,
   // Pre-filled values from CLI flags (partial non-interactive)
@@ -336,6 +339,9 @@ export default function App({
           rolesData={rolesData}
           initialTasks={assemblyResult.initialTasks}
           apiBaseUrl={apiBaseUrl}
+          apiEmail={apiEmail}
+          apiPassword={apiPassword}
+          apiWorkspaceRoot={apiWorkspaceRoot}
           model={model}
           startCeo={startCeo}
           onComplete={(result) => {

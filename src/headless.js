@@ -1,6 +1,7 @@
+import { join, basename } from 'node:path';
 import { loadPresets, loadModules, loadRoles } from './logic/load-templates.js';
 import { resolveCapabilities, buildAllRoles } from './logic/resolve.js';
-import { assembleCompany, toPascalCase } from './logic/assemble.js';
+import { assembleCompany } from './logic/assemble.js';
 import { PaperclipClient } from './api/client.js';
 import { provisionCompany } from './api/provision.js';
 
@@ -137,7 +138,11 @@ export async function runHeadless(opts) {
   if (opts.apiEnabled) {
     log('');
     log('Provisioning via Paperclip API...');
-    const client = new PaperclipClient(opts.apiBaseUrl);
+    const client = new PaperclipClient(opts.apiBaseUrl, {
+      email: opts.apiEmail,
+      password: opts.apiPassword,
+    });
+    await client.connect();
 
     const provisionResult = await provisionCompany({
       client,
@@ -151,6 +156,9 @@ export async function runHeadless(opts) {
       rolesData,
       initialTasks: assemblyResult.initialTasks,
       model: opts.model,
+      remoteCompanyDir: opts.apiWorkspaceRoot
+        ? join(opts.apiWorkspaceRoot, basename(assemblyResult.companyDir))
+        : null,
       startCeo: opts.startCeo,
       onProgress: (line) => log(`  ${line}`),
     });
