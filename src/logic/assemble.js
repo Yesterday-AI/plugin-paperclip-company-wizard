@@ -109,6 +109,25 @@ export async function assembleCompany({
   // Determine all roles present
   const allRoles = new Set([...baseRoleNames, ...extraRoleNames]);
 
+  // Validate module dependencies before starting assembly.
+  // Skip modules that won't activate (missing directory or gated by activatesWithRoles).
+  const selectedSet = new Set(moduleNames);
+  for (const moduleName of moduleNames) {
+    const moduleDir = join(templatesDir, 'modules', moduleName);
+    if (!(await exists(moduleDir))) continue;
+    const moduleJson = await readJson(join(moduleDir, 'module.meta.json'));
+    if (moduleJson?.activatesWithRoles?.length) {
+      const hasActivatingRole = moduleJson.activatesWithRoles.some((r) => allRoles.has(r));
+      if (!hasActivatingRole) continue;
+    }
+    const deps = moduleJson?.requires || [];
+    for (const dep of deps) {
+      if (!selectedSet.has(dep)) {
+        throw new Error(`Module "${moduleName}" requires module "${dep}", which is not selected`);
+      }
+    }
+  }
+
   // 1. Copy base roles (exclude .meta.json metadata)
   for (const roleName of baseRoleNames) {
     const roleSrc = join(rolesDir, roleName);
