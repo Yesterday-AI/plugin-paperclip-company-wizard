@@ -467,6 +467,9 @@ export async function assembleCompany({
   if (goal?.title) {
     bootstrap += `${stepN++}. Create the goal: "${goal.title}"\n`;
   }
+  if (goalTemplate) {
+    bootstrap += `${stepN++}. Create the starter goal "${goalTemplate.title}" and its issues listed above\n`;
+  }
   if (initialTasks.length > 0) {
     bootstrap += `${stepN++}. Create the initial issues listed above\n`;
   }

@@ -174,7 +174,7 @@ export async function runHeadless(opts) {
       allRoles: assemblyResult.allRoles,
       rolesData,
       initialTasks: assemblyResult.initialTasks,
-      goalTemplate: assemblyResult.goalTemplate,
+      goalTemplate: selectedGoalTemplate,
       model: opts.model,
       remoteCompanyDir: opts.apiWorkspaceRoot
         ? join(opts.apiWorkspaceRoot, basename(assemblyResult.companyDir))

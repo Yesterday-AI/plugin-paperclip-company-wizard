@@ -39500,7 +39500,7 @@ function StepGoalTemplates({ goalTemplates, onComplete }) {
   const skip = goalTemplates.length === 0;
   (0, import_react41.useEffect)(() => {
     if (skip) onComplete(null);
-  }, [skip, onComplete]);
+  }, [skip]);
   if (skip) return null;
   const items = [
     {
@@ -40062,6 +40062,10 @@ Read: \`docs/${doc}\`
     bootstrap += `${stepN++}. Create the goal: "${goal.title}"
 `;
   }
+  if (goalTemplate) {
+    bootstrap += `${stepN++}. Create the starter goal "${goalTemplate.title}" and its issues listed above
+`;
+  }
   if (initialTasks.length > 0) {
     bootstrap += `${stepN++}. Create the initial issues listed above
 `;
@@ -40451,6 +40455,7 @@ async function provisionCompany({
   }
   return {
     companyId,
+    issuePrefix: company.issuePrefix,
     goalId,
     goalTemplateId,
     projectId,
@@ -40773,7 +40778,8 @@ function App2({
   initialRepo = null,
   initialPreset = null,
   initialModules = [],
-  initialRoles = []
+  initialRoles = [],
+  initialGoalTemplate = null
 }) {
   const { exit } = use_app_default();
   const [step, setStep] = (0, import_react47.useState)(STEPS.LOADING);
@@ -40800,11 +40806,15 @@ function App2({
   const [selectedGoalTemplate, setSelectedGoalTemplate] = (0, import_react47.useState)(null);
   const [assemblyResult, setAssemblyResult] = (0, import_react47.useState)(null);
   const [provisionResult, setProvisionResult] = (0, import_react47.useState)(null);
-  function resolveFirstStep(loadedPresets) {
+  function resolveFirstStep(loadedPresets, loadedGoals) {
     if (!companyName) return STEPS.NAME;
     if (!goal.title && !initialGoal) return STEPS.GOAL;
     if (!project.name && !initialProjectName) {
       setProject((p) => ({ ...p, name: companyName }));
+    }
+    if (initialGoalTemplate) {
+      const tmpl = loadedGoals.find((g) => g.name === initialGoalTemplate);
+      if (tmpl) setSelectedGoalTemplate(tmpl);
     }
     if (initialPreset) {
       const preset = loadedPresets.find((p) => p.name === initialPreset);
@@ -40832,7 +40842,7 @@ function App2({
       setModules(m);
       setAvailableRoles(r);
       setGoalTemplates(g);
-      setStep(resolveFirstStep(p));
+      setStep(resolveFirstStep(p, g));
     }).catch((err) => {
       setError(err.message);
       setStep(STEPS.ERROR);
@@ -41211,7 +41221,7 @@ async function runHeadless(opts) {
       allRoles: assemblyResult.allRoles,
       rolesData,
       initialTasks: assemblyResult.initialTasks,
-      goalTemplate: assemblyResult.goalTemplate,
+      goalTemplate: selectedGoalTemplate,
       model: opts.model,
       remoteCompanyDir: opts.apiWorkspaceRoot ? join5(opts.apiWorkspaceRoot, basename2(assemblyResult.companyDir)) : null,
       startCeo: opts.startCeo,
@@ -41971,7 +41981,8 @@ if (config.aiDescription !== null) {
         initialRepo: config.repo,
         initialPreset: config.preset,
         initialModules: config.modules,
-        initialRoles: config.roles
+        initialRoles: config.roles,
+        initialGoalTemplate: config.goalTemplate
       }
     )
   );
