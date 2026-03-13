@@ -54,6 +54,7 @@ export default function App({
   initialPreset = null,
   initialModules = [],
   initialRoles = [],
+  initialGoalTemplate = null,
 }) {
   const { exit } = useApp();
 
@@ -89,12 +90,16 @@ export default function App({
   const [provisionResult, setProvisionResult] = useState(null);
 
   // Determine the first step that needs user input
-  function resolveFirstStep(loadedPresets) {
+  function resolveFirstStep(loadedPresets, loadedGoals) {
     if (!companyName) return STEPS.NAME;
     if (!goal.title && !initialGoal) return STEPS.GOAL;
     // If goal was set via flag, project name defaults to company name
     if (!project.name && !initialProjectName) {
       setProject((p) => ({ ...p, name: companyName }));
+    }
+    if (initialGoalTemplate) {
+      const tmpl = loadedGoals.find((g) => g.name === initialGoalTemplate);
+      if (tmpl) setSelectedGoalTemplate(tmpl);
     }
     if (initialPreset) {
       // Apply preset immediately
@@ -126,7 +131,7 @@ export default function App({
         setModules(m);
         setAvailableRoles(r);
         setGoalTemplates(g);
-        setStep(resolveFirstStep(p));
+        setStep(resolveFirstStep(p, g));
       })
       .catch((err) => {
         setError(err.message);

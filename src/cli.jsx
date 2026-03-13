@@ -326,6 +326,7 @@ if (config.aiDescription !== null) {
       initialPreset={config.preset}
       initialModules={config.modules}
       initialRoles={config.roles}
+      initialGoalTemplate={config.goalTemplate}
     />,
   );
 

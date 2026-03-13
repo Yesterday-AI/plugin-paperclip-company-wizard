@@ -8,7 +8,8 @@ export default function StepGoalTemplates({ goalTemplates, onComplete }) {
 
   useEffect(() => {
     if (skip) onComplete(null);
-  }, [skip, onComplete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skip]);
 
   if (skip) return null;
 
