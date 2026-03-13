@@ -335,6 +335,7 @@ export default function App({
           moduleNames={selectedModules}
           extraRoleNames={selectedRoles}
           goalTemplate={selectedGoalTemplate}
+          presetName={presetName}
           outputDir={outputDir}
           templatesDir={templatesDir}
           onComplete={(result) => {

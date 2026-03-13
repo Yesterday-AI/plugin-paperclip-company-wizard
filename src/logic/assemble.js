@@ -67,6 +67,7 @@ export function toPascalCase(name) {
  * @param {string[]} opts.moduleNames
  * @param {string[]} opts.extraRoleNames
  * @param {object|null} opts.goalTemplate - Selected goal template (from templates/goals/)
+ * @param {string|null} opts.presetName - Name of the preset used (for capabilities manifest)
  * @param {string} opts.outputDir
  * @param {string} opts.templatesDir
  * @param {(line: string) => void} opts.onProgress
@@ -79,6 +80,7 @@ export async function assembleCompany({
   moduleNames,
   extraRoleNames,
   goalTemplate = null,
+  presetName = null,
   outputDir,
   templatesDir,
   onProgress = () => {},
@@ -167,6 +169,7 @@ export async function assembleCompany({
 
   // 3. Apply modules with capability-aware skill assignment
   const initialTasks = [];
+  const manifestModules = [];
   for (const moduleName of moduleNames) {
     const moduleDir = join(templatesDir, 'modules', moduleName);
     if (!(await exists(moduleDir))) {
@@ -220,6 +223,14 @@ export async function assembleCompany({
         }
       }
     }
+
+    // Collect manifest data for this module
+    const moduleCapabilities = [];
+    for (const [skillName, { primary, cap }] of capabilityOwners) {
+      const fallbacks = cap.owners.filter((r) => r !== primary && allRoles.has(r));
+      moduleCapabilities.push({ skill: skillName, primary, fallbacks });
+    }
+    manifestModules.push({ module: moduleName, capabilities: moduleCapabilities });
 
     // Copy agent skills.
     //
@@ -474,6 +485,16 @@ export async function assembleCompany({
 
   await writeFile(join(companyDir, 'BOOTSTRAP.md'), bootstrap);
   onProgress('+ BOOTSTRAP.md');
+
+  // 7. Generate capabilities.json manifest
+  const manifest = {
+    assembledAt: new Date().toISOString(),
+    preset: presetName || null,
+    roles: [...allRoles],
+    modules: manifestModules,
+  };
+  await writeFile(join(companyDir, 'capabilities.json'), JSON.stringify(manifest, null, 2) + '\n');
+  onProgress('+ capabilities.json');
 
   return { companyDir, allRoles, initialTasks, goalTemplate };
 }
