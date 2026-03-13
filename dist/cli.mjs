@@ -40253,12 +40253,13 @@ var PaperclipClient = class {
       })
     });
   }
-  async createProject(companyId, { name, description, workspace }) {
+  async createProject(companyId, { name, description, goalIds, workspace }) {
     return this._fetch(`/api/companies/${companyId}/projects`, {
       method: "POST",
       body: JSON.stringify({
         name,
         description: description || null,
+        ...goalIds?.length ? { goalIds } : {},
         workspace: workspace || void 0
       })
     });
@@ -40350,6 +40351,7 @@ async function provisionCompany({
   const project = await client.createProject(companyId, {
     name: projectName,
     description: projectDescription || (goal?.title ? `Goal: ${goal.title}` : null),
+    goalIds: goalId ? [goalId] : [],
     workspace: {
       cwd: projectCwd,
       ...repoUrl ? { repoUrl } : {},
@@ -40414,10 +40416,24 @@ async function provisionCompany({
     const tg = await client.createGoal(companyId, {
       title: goalTemplate.title,
       description: goalTemplate.description,
-      level: "company"
+      level: "company",
+      parentId: goalId
     });
     goalTemplateId = tg.id;
     onProgress(`\u2713 Starter goal created: ${goalTemplate.title}`);
+    const templateProjectCwd = join2(apiCompanyDir, "projects", toPascalCase(goalTemplate.title));
+    onProgress(`Creating project "${goalTemplate.title}"...`);
+    const templateProject = await client.createProject(companyId, {
+      name: goalTemplate.title,
+      description: goalTemplate.description,
+      goalIds: [goalTemplateId],
+      workspace: {
+        cwd: templateProjectCwd,
+        isPrimary: true
+      }
+    });
+    const templateProjectId = templateProject.id;
+    onProgress(`\u2713 Project "${goalTemplate.title}" created`);
     const milestoneIds = /* @__PURE__ */ new Map();
     if (goalTemplate.milestones?.length) {
       for (const milestone of goalTemplate.milestones) {
@@ -40447,7 +40463,7 @@ async function provisionCompany({
             title: issue.title,
             description: issue.description,
             priority: issue.priority,
-            projectId,
+            projectId: templateProjectId,
             goalId: issueGoalId,
             assigneeAgentId
           });

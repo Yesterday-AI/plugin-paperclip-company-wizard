@@ -68,12 +68,13 @@ export async function provisionCompany({
     onProgress(`✓ Goal created: ${goal.title}`);
   }
 
-  // 3. Create project with workspace
+  // 3. Create project with workspace (linked to company goal)
   const projectCwd = join(apiCompanyDir, 'projects', toPascalCase(projectName));
   onProgress(`Creating project "${projectName}"...`);
   const project = await client.createProject(companyId, {
     name: projectName,
     description: projectDescription || (goal?.title ? `Goal: ${goal.title}` : null),
+    goalIds: goalId ? [goalId] : [],
     workspace: {
       cwd: projectCwd,
       ...(repoUrl ? { repoUrl } : {}),
@@ -144,7 +145,7 @@ export async function provisionCompany({
     onProgress(`✓ Issue created: ${task.title}${assignLabel}`);
   }
 
-  // 6. Create goal template goal, milestones (sub-goals), and issues (if selected)
+  // 6. Create goal template goal, project, milestones (sub-goals), and issues (if selected)
   let goalTemplateId = null;
   const goalTemplateErrors = [];
   if (goalTemplate) {
@@ -153,11 +154,27 @@ export async function provisionCompany({
       title: goalTemplate.title,
       description: goalTemplate.description,
       level: 'company',
+      parentId: goalId,
     });
     goalTemplateId = tg.id;
     onProgress(`✓ Starter goal created: ${goalTemplate.title}`);
 
-    // 6a. Create milestones as sub-goals under the starter goal
+    // 6a. Create a dedicated project for this goal template
+    const templateProjectCwd = join(apiCompanyDir, 'projects', toPascalCase(goalTemplate.title));
+    onProgress(`Creating project "${goalTemplate.title}"...`);
+    const templateProject = await client.createProject(companyId, {
+      name: goalTemplate.title,
+      description: goalTemplate.description,
+      goalIds: [goalTemplateId],
+      workspace: {
+        cwd: templateProjectCwd,
+        isPrimary: true,
+      },
+    });
+    const templateProjectId = templateProject.id;
+    onProgress(`✓ Project "${goalTemplate.title}" created`);
+
+    // 6b. Create milestones as sub-goals under the starter goal
     const milestoneIds = new Map(); // milestone id string → API goal UUID
     if (goalTemplate.milestones?.length) {
       for (const milestone of goalTemplate.milestones) {
@@ -178,7 +195,7 @@ export async function provisionCompany({
       }
     }
 
-    // 6b. Create issues linked to milestones and assigned to agents
+    // 6c. Create issues linked to milestones, project, and assigned to agents
     if (goalTemplate.issues?.length) {
       for (const issue of goalTemplate.issues) {
         try {
@@ -190,7 +207,7 @@ export async function provisionCompany({
             title: issue.title,
             description: issue.description,
             priority: issue.priority,
-            projectId,
+            projectId: templateProjectId,
             goalId: issueGoalId,
             assigneeAgentId,
           });

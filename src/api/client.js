@@ -137,12 +137,13 @@ export class PaperclipClient {
     });
   }
 
-  async createProject(companyId, { name, description, workspace }) {
+  async createProject(companyId, { name, description, goalIds, workspace }) {
     return this._fetch(`/api/companies/${companyId}/projects`, {
       method: 'POST',
       body: JSON.stringify({
         name,
         description: description || null,
+        ...(goalIds?.length ? { goalIds } : {}),
         workspace: workspace || undefined,
       }),
     });
