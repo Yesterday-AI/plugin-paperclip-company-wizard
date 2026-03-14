@@ -1,0 +1,14 @@
+{
+  "name": "game-artist",
+  "title": "Game Artist",
+  "division": "design",
+  "tagline": "Creates the visual world players inhabit",
+  "paperclipRole": "designer",
+  "description": "Owns visual art production: sprites, textures, tilesets, UI elements, and visual effects. Generates assets using AI image generation tools and code-based approaches (SVG, procedural generation, pixel art scripts).",
+  "reportsTo": "ceo",
+  "enhances": [
+    "Takes over art asset creation from Engineer (placeholder art → production art)",
+    "Takes over art style guide definition from Game Designer",
+    "Adds visual consistency review pass when pr-review module is active"
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "name": "build-game",
+  "description": "Build a game from idea to playable release. Game design, prototyping, art creation, playtesting, and shipping. Works for any genre — platformers, puzzles, roguelikes, strategy, etc.",
+  "constraints": [],
+  "roles": [
+    "game-designer",
+    "game-artist"
+  ],
+  "modules": [
+    "game-design",
+    "tech-stack",
+    "github-repo",
+    "backlog",
+    "auto-assign",
+    "stall-detection"
+  ],
+  "goals": [
+    {
+      "title": "Build the Game",
+      "description": "Take a game idea from concept to playable release: design the game, prototype the core loop, create art, build all content, playtest, balance, and ship.",
+      "project": true,
+      "milestones": [
+        {
+          "id": "concept",
+          "title": "Concept",
+          "description": "Define the game: core mechanic, game loop, progression, art direction, and target audience.",
+          "completionCriteria": "GDD exists with core mechanic, game loop, progression, controls, art direction, and tuning parameters defined."
+        },
+        {
+          "id": "prototype",
+          "title": "Prototype",
+          "description": "Build a playable prototype of the core loop with placeholder art. Validate that the core mechanic is fun.",
+          "completionCriteria": "Playable prototype exists with core mechanic implemented. First playtest completed with results documented."
+        },
+        {
+          "id": "vertical-slice",
+          "title": "Vertical Slice",
+          "description": "Polish one complete level or section with production art, audio, and UI. Prove the full experience works.",
+          "completionCriteria": "One fully polished level/section playable with final art, UI, and audio. Second playtest round completed."
+        },
+        {
+          "id": "production",
+          "title": "Production",
+          "description": "Build all remaining levels, content, and features. Implement full progression, menus, and game flow.",
+          "completionCriteria": "All levels/content built. Full game flow works from start screen to end state. All art assets integrated."
+        },
+        {
+          "id": "polish-ship",
+          "title": "Polish & Ship",
+          "description": "Final balancing, bug fixing, performance optimization, and distribution.",
+          "completionCriteria": "Game is balanced, bug-free, and distributed to target platform."
+        }
+      ],
+      "issues": [
+        {
+          "title": "Create Game Design Document",
+          "description": "Define the game's complete design. Follow the GDD template in docs/gdd-template.md.\n\nMust include: concept pitch, core mechanic (input → action → feedback → consequence), three-layer game loop, progression system, win/lose conditions, controls, art direction, audio direction, and all tuning parameters.\n\nOutput: docs/GDD.md",
+          "priority": "critical",
+          "milestone": "concept",
+          "assignTo": "game-designer"
+        },
+        {
+          "title": "Choose game engine and set up project",
+          "description": "Based on the GDD requirements (genre, platform, art style), evaluate and select a game engine or framework. Options to consider:\n- **Web:** Phaser, PixiJS, Three.js, Kaboom.js, vanilla Canvas/WebGL\n- **Cross-platform:** Godot, Unity, Love2D, Defold\n- **Minimal:** Custom engine if the game is simple enough\n\nSet up the project structure, build pipeline, and basic game loop scaffold. Document the choice in docs/TECH-STACK.md.",
+          "priority": "critical",
+          "milestone": "concept",
+          "assignTo": "engineer"
+        },
+        {
+          "title": "Define art style guide",
+          "description": "Based on the GDD art direction, create a concrete art style guide:\n- Sprite/asset dimensions and resolution\n- Color palette (exact hex values, limited palette if pixel art)\n- Color language: what colors mean in gameplay (player, enemy, pickup, hazard, background)\n- Animation conventions: frame counts, frame rates, style\n- Asset naming conventions and directory structure\n- Reference images or generated style samples\n\nOutput: docs/ART-STYLE-GUIDE.md and sample assets in assets/reference/",
+          "priority": "high",
+          "milestone": "concept",
+          "assignTo": "game-artist"
+        },
+        {
+          "title": "Approve game concept",
+          "description": "Review the GDD, tech stack choice, and art style guide. Confirm the game direction or request changes before prototype work begins.\n\nCheck:\n- Is the core mechanic clear and implementable?\n- Is the scope realistic?\n- Does the art direction fit the game?\n- Are the platform and engine choices appropriate?",
+          "priority": "high",
+          "milestone": "concept",
+          "assignTo": "user"
+        },
+        {
+          "title": "Implement core mechanic prototype",
+          "description": "Build a playable prototype focused on the core mechanic only:\n- Player character with basic movement and the core action\n- Minimal game loop (start → play → end)\n- Placeholder art (colored rectangles, basic shapes)\n- Tuning parameters exposed as constants (not hardcoded in logic)\n\nThe prototype must be playable and demonstrate whether the core mechanic feels good. Don't build menus, progression, or polish.",
+          "priority": "critical",
+          "milestone": "prototype",
+          "assignTo": "engineer"
+        },
+        {
+          "title": "Create placeholder art for prototype",
+          "description": "Generate basic art assets for the prototype:\n- Player character sprite (simple, readable silhouette)\n- Basic tileset or background elements\n- Key interactive objects (enemies, pickups, hazards)\n\nThese are working assets — better than colored rectangles but not final. Focus on gameplay readability over visual polish.",
+          "priority": "high",
+          "milestone": "prototype",
+          "assignTo": "game-artist"
+        },
+        {
+          "title": "First playtest and balancing pass",
+          "description": "Play the prototype and document findings:\n- Is the core mechanic fun? Does it feel good?\n- Are controls responsive? Any input lag or awkwardness?\n- Difficulty: too easy, too hard, or unclear?\n- What's missing that would make it fun? What should be cut?\n- Tuning parameter adjustments needed\n\nOutput: docs/PLAYTEST-RESULTS.md with specific findings and recommended changes.",
+          "priority": "high",
+          "milestone": "prototype",
+          "assignTo": "game-designer"
+        },
+        {
+          "title": "Create production art for vertical slice",
+          "description": "Generate final-quality art assets for one complete level/section:\n- Player character: full sprite sheet (idle, walk, jump, attack, death animations)\n- Tileset: complete set for one environment type\n- Enemies: sprites with animation frames\n- UI elements: health bar, score display, basic HUD\n- Background layers (if parallax)\n\nFollow the art style guide. Assets must be consistent and game-ready.",
+          "priority": "high",
+          "milestone": "vertical-slice",
+          "assignTo": "game-artist"
+        },
+        {
+          "title": "Build polished vertical slice level",
+          "description": "Take one level/section to production quality:\n- Integrate production art assets\n- Implement full game feel: screen shake, hit stop, particles, juice\n- Add UI: HUD, pause menu, game over screen\n- Add sound effects and music (placeholder or generated)\n- Polish: transitions, animations, feedback for every player action\n\nThis level should represent the final game quality.",
+          "priority": "high",
+          "milestone": "vertical-slice",
+          "assignTo": "engineer"
+        },
+        {
+          "title": "Design all levels and progression",
+          "description": "Create detailed level designs for the full game:\n- Level-by-level breakdown: layout, encounters, mechanics introduced, difficulty target\n- Progression curve: how difficulty ramps across the full game\n- Unlock schedule: what the player earns and when\n- Pacing map: tension/relief rhythm across the full experience\n\nOutput: docs/LEVEL-DESIGNS.md with per-level specs.",
+          "priority": "high",
+          "milestone": "production",
+          "assignTo": "game-designer"
+        },
+        {
+          "title": "Create remaining art assets",
+          "description": "Generate all remaining art assets for the full game:\n- Additional tilesets for each environment type\n- All enemy variants with animations\n- Pickups, power-ups, and collectibles\n- Menu screens: title, options, credits\n- Any remaining UI elements\n\nFollow the art style guide. Maintain visual consistency across all assets.",
+          "priority": "high",
+          "milestone": "production",
+          "assignTo": "game-artist"
+        },
+        {
+          "title": "Build all levels and game flow",
+          "description": "Implement the full game:\n- All levels from the level design document\n- Complete game flow: title screen → level select → gameplay → game over → credits\n- Full progression system: unlocks, saves, scoring\n- All enemy types and behaviors\n- Integrate all art and audio assets\n\nThe game should be completable from start to finish.",
+          "priority": "high",
+          "milestone": "production",
+          "assignTo": "engineer"
+        },
+        {
+          "title": "Final balancing and bug fixing",
+          "description": "Play through the entire game and:\n- Adjust difficulty curve based on full playthrough\n- Fix all gameplay bugs\n- Tune all parameters for satisfying progression\n- Verify no soft-locks or unwinnable states\n- Check edge cases: max score, empty inventory, rapid inputs\n\nUpdate docs/GDD.md with final tuning values.",
+          "priority": "high",
+          "milestone": "polish-ship",
+          "assignTo": "game-designer"
+        },
+        {
+          "title": "Performance optimization and platform build",
+          "description": "Optimize and prepare for distribution:\n- Performance: stable frame rate on target platform\n- Asset optimization: sprite atlases, compressed textures, lazy loading\n- Build for target platform (web: bundle + deploy, desktop: executable, mobile: package)\n- Test on target devices/browsers\n\nOutput: distributable build in dist/ or build/",
+          "priority": "high",
+          "milestone": "polish-ship",
+          "assignTo": "engineer"
+        },
+        {
+          "title": "Distribution and launch",
+          "description": "Distribute the game to players:\n- Deploy to target platform (itch.io, web hosting, app store, etc.)\n- Create game page with screenshots, description, controls\n- Set up analytics if applicable\n- Announce availability\n\nThis is a human task — platform accounts and publishing decisions require board involvement.",
+          "priority": "medium",
+          "milestone": "polish-ship",
+          "assignTo": "user"
+        }
+      ]
+    }
+  ]
+}

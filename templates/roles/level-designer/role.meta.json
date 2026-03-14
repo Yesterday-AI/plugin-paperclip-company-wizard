@@ -1,0 +1,13 @@
+{
+  "name": "level-designer",
+  "title": "Level Designer",
+  "division": "product",
+  "tagline": "Crafts the spaces players explore",
+  "paperclipRole": "pm",
+  "description": "Owns level layout, pacing, difficulty curves, environmental storytelling, and spatial progression. Translates game design into playable spaces.",
+  "reportsTo": "ceo",
+  "enhances": [
+    "Takes over level-specific design from Game Designer/Engineer",
+    "Contributes difficulty curve and pacing data to game balancing"
+  ]
+}

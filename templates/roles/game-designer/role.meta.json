@@ -1,0 +1,14 @@
+{
+  "name": "game-designer",
+  "title": "Game Designer",
+  "division": "product",
+  "tagline": "Owns what makes the game fun",
+  "paperclipRole": "pm",
+  "description": "Owns the game design document, core mechanics, progression systems, difficulty curves, and balancing. Defines what the game is and how it plays.",
+  "reportsTo": "ceo",
+  "enhances": [
+    "Takes over game-design from Engineer/CEO (they become fallback)",
+    "Takes over user-testing with playtesting focus (engagement, fun, difficulty)",
+    "Adds gameplay review pass when pr-review module is active"
+  ]
+}

@@ -110,7 +110,7 @@ $ clipper --api
 | `--project <name>` | Project name | company name |
 | `--project-description <desc>` | Project description | _(wizard prompt)_ |
 | `--repo <url>` | GitHub repository URL | _(wizard prompt)_ |
-| `--preset <name>` | Preset: `fast`, `quality`, `rad`, `startup`, `research`, `full`, `secure`, `gtm`, `content`, `repo-maintenance` | _(wizard prompt)_ |
+| `--preset <name>` | Preset: `fast`, `quality`, `rad`, `startup`, `research`, `full`, `secure`, `gtm`, `content`, `repo-maintenance`, `build-game` | _(wizard prompt)_ |
 | `--modules <a,b,c>` | Comma-separated module names (merged with preset) | _(wizard prompt)_ |
 | `--roles <a,b>` | Comma-separated extra role names (merged with preset) | _(wizard prompt)_ |
 
@@ -256,6 +256,7 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 | `issue-triage` | Product Owner &rarr; Engineer | CEO | triage |
 | `dependency-audit` | DevOps &rarr; Security Engineer | Engineer | dependency-management |
 | `release-process` | DevOps &rarr; Engineer | CEO | release-management |
+| `game-design` | Game Designer &rarr; Engineer | CEO | game-design |
 | `stall-detection` | CEO (always) | — | stall-detection |
 | `vision-workshop` | CEO (always) | — | vision-workshop |
 
@@ -282,6 +283,7 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 | **`build-api`** | build-api, github-repo, backlog, auto-assign, ci-cd, stall-detection | Build a REST/GraphQL API from scratch |
 | **`website-relaunch`** | website-relaunch, github-repo, pr-review, backlog, auto-assign, stall-detection + UI Designer + PO | Relaunch a website with external design assets |
 | **`repo-maintenance`** | triage, codebase-onboarding, dependency-management, release-management, github-repo, pr-review, backlog, auto-assign, stall-detection + Code Reviewer + PO | Maintain an existing repository |
+| **`build-game`** | game-design, tech-stack, github-repo, backlog, auto-assign, stall-detection + Game Designer + Game Artist | Build a game from idea to release |
 
 > **`fast`** is for a single engineer — multiple engineers without review will cause conflicts.
 >
@@ -312,6 +314,8 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 
 **repo-maintenance** — Custodial maintenance for existing repositories. Agents review and merge open PRs, triage inbound GitHub issues, audit codebase health, manage dependencies, and handle releases. Code Reviewer for PR quality gates, Product Owner for issue triage and backlog. Inline goal bootstraps the team through repo onboarding, process setup, initial sweep, and steady-state maintenance.
 
+**build-game** — Game development from idea to playable release. Game Designer owns the GDD, mechanics, and balancing. Game Artist generates sprites, textures, and tilesets via AI image generation and code-based approaches. Inline goal with 5 milestones: concept (GDD + engine + art style), prototype (core loop + placeholder art + first playtest), vertical slice (one polished level), production (all content), polish & ship (balancing + distribution). Works for any genre.
+
 </details>
 
 <br>
@@ -335,6 +339,7 @@ Start with CEO + Engineer. Everything works. Add specialists and responsibilitie
 | **`accessibility`** | WCAG 2.2 compliance audit and remediation | Primary owner runs audit |
 | **`website-relaunch`** | Website relaunch: audit, design ingestion, implementation, migration | Engineer audits + analyzes designs |
 | **`launch-mvp`** | MVP lifecycle: scope, build core feature, deploy, iterate from feedback | CEO scopes, Engineer builds |
+| **`game-design`** | Game Design Document, core mechanics, progression, balancing | Primary owner creates GDD |
 
 ### Maintenance & Operations
 
@@ -543,6 +548,14 @@ Release lifecycle: semantic versioning, changelog generation, git tagging, GitHu
 - **Fallback:** Engineer documents current process and sets up basic semver
 - **Output:** `docs/RELEASE-PROCESS.md`
 
+#### game-design
+
+Game Design Document creation and ongoing mechanic design, progression, and balancing. Ships a GDD template covering concept, core mechanic, three-layer game loop, progression, win/lose, controls, art/audio direction, and tuning parameters. Game Designer gets a deep role-specific skill with balancing workflows and design experiments.
+
+- **Capability:** `game-design` — owners: `game-designer` &rarr; `engineer` &rarr; `ceo`
+- **Fallback:** CEO writes minimal GDD with concept and core mechanic only
+- **Doc:** `docs/gdd-template.md`
+
 #### stall-detection
 
 Detects issues stuck in `in_progress` or `in_review` with no recent activity. Nudges the assigned agent, escalates to the board if nudging doesn't help.
@@ -571,6 +584,9 @@ Every company starts with **CEO** and **Engineer** (base roles). These optional 
 | **Technical Writer** | `general` | CEO | Takes over documentation, adds doc review pass |
 | **Security Engineer** | `general` | CEO | Takes over security-audit, adds security review pass |
 | **Customer Success** | `general` | CEO | Takes over competitive-intel customer analysis |
+| **Game Designer** | `pm` | CEO | Takes over game-design from Engineer, playtesting focus |
+| **Level Designer** | `pm` | CEO | Takes over level-specific design from Game Designer |
+| **Game Artist** | `designer` | CEO | Takes over art asset creation from Engineer |
 
 <details>
 <summary><strong>Role details</strong></summary>
@@ -622,6 +638,18 @@ Owns threat modeling, security code reviews, OWASP compliance, and secure coding
 #### Customer Success Manager
 
 Owns customer health monitoring, feedback synthesis, churn prevention, and competitive intelligence from the customer perspective. Empathy-driven, data-backed.
+
+#### Game Designer
+
+Owns the Game Design Document, core mechanics, game loop, progression systems, difficulty curves, and balancing. Defines what the game is and how it plays. Runs design experiments and iterates based on playtest data.
+
+#### Level Designer
+
+Owns level layout, pacing, difficulty curves, environmental storytelling, and spatial progression. Translates game design into playable spaces and encounters.
+
+#### Game Artist
+
+Owns visual art production: sprites, textures, tilesets, UI elements, and visual effects. Creates assets using AI image generation tools, code-based approaches (SVG, procedural generation, pixel art scripts), and asset pipeline tools.
 
 </details>
 
