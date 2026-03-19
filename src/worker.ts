@@ -35,7 +35,10 @@ function copyDirSync(src: string, dest: string): void {
  * Expects a URL in the form: https://github.com/{owner}/{repo}/tree/{branch}/{subpath}
  */
 function downloadTemplatesFromGithub(destDir: string, githubUrl: string): void {
-  const match = githubUrl.match(/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.*)/);
+  // Branch names may contain slashes (e.g. feature/my-branch). We greedily capture
+  // everything after /tree/ up to the last slash as the branch, and the final segment
+  // as the subpath root. Subpaths deeper than one level are not supported.
+  const match = githubUrl.match(/github\.com\/([^/]+)\/([^/]+)\/tree\/(.+)\/([^/]+)\/?$/);
   if (!match) {
     throw new Error(
       `Unsupported templates URL: ${githubUrl}. Expected https://github.com/{owner}/{repo}/tree/{branch}/{path}`,

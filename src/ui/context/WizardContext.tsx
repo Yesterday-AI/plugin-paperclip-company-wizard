@@ -201,12 +201,13 @@ function reducer(state: WizardState, action: Action): WizardState {
         presetName: action.name,
         selectedModules: preset?.modules ?? [],
         selectedRoles: preset?.roles ?? [],
+        fileOverrides: {},
       };
     }
     case 'SET_MODULES':
-      return { ...state, selectedModules: action.modules };
+      return { ...state, selectedModules: action.modules, fileOverrides: {} };
     case 'SET_ROLES':
-      return { ...state, selectedRoles: action.roles };
+      return { ...state, selectedRoles: action.roles, fileOverrides: {} };
     case 'SET_AI_DESCRIPTION':
       return { ...state, aiDescription: action.value };
     case 'SET_AI_LOADING':
