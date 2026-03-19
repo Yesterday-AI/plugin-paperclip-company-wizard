@@ -403,7 +403,11 @@ const plugin = definePlugin({
       // Apply file overrides from UI edits
       const fileOverrides = (params.fileOverrides as Record<string, string>) ?? {};
       for (const [relPath, content] of Object.entries(fileOverrides)) {
-        const absPath = path.join(companyDir, relPath);
+        const absPath = path.resolve(companyDir, relPath);
+        if (!absPath.startsWith(companyDir + path.sep) && absPath !== companyDir) {
+          log(`⚠ Skipped override outside company dir: ${relPath}`);
+          continue;
+        }
         if (fs.existsSync(absPath)) {
           fs.writeFileSync(absPath, content, 'utf-8');
           log(`✎ Override: ${relPath}`);
@@ -443,6 +447,8 @@ const plugin = definePlugin({
       // Use the user-specified cwd if provided; otherwise leave it unset so the agent
       // runs from whatever directory the adapter defaults to.
       const adapterConfig: Record<string, unknown> = {
+        // Module-derived adapter overrides (e.g. chrome: true from website-relaunch)
+        ...(assembleResult.roleAdapterOverrides?.get('ceo') ?? {}),
         ...(userCwd ? { cwd: userCwd } : {}),
         ...(userModel ? { model: userModel } : {}),
       };
