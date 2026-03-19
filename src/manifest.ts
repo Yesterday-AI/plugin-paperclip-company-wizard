@@ -45,19 +45,25 @@ const manifest: PaperclipPluginManifestV1 = {
         description:
           'GitHub tree URL to pull templates from when the templates directory does not exist.',
       },
-      paperclipEmail: {
+      paperclipUrl: {
         'x-order': 4,
+        type: 'string',
+        description:
+          'Paperclip instance URL. Defaults to http://localhost:3100 or the PAPERCLIP_PUBLIC_URL env var.',
+      },
+      paperclipEmail: {
+        'x-order': 5,
         type: 'string',
         description: 'Board login email (for authenticated instances).',
       },
       paperclipPassword: {
-        'x-order': 5,
+        'x-order': 6,
         type: 'string',
         format: 'secret-ref',
         description: 'Board login password.',
       },
       anthropicApiKey: {
-        'x-order': 6,
+        'x-order': 7,
         type: 'string',
         format: 'secret-ref',
         description:
