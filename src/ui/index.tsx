@@ -10,7 +10,7 @@ import { WizardShell } from './components/WizardShell';
 import type { TemplateData } from './types';
 import './index.css';
 
-const PLUGIN_ID = 'paperclipai.plugin-clipper';
+const PLUGIN_ID = 'yesterday-ai.plugin-paperclip-company-wizard';
 
 export function WizardPage(_props: PluginPageProps) {
   const { data: templates, loading, error } = usePluginData<TemplateData>('templates');
