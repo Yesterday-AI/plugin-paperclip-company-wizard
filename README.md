@@ -106,6 +106,8 @@ Start with just a CEO. Everything works. Add roles and responsibilities shift au
 
 ## Presets
 
+Presets are curated starting points that bundle a set of modules and optional roles for a specific use case. Pick one in the wizard and you're ready to go — or use it as a base and add modules on top.
+
 | Preset | Modules | Best for |
 | :----- | :------ | :------- |
 | **`fast`** | github-repo, backlog, auto-assign, stall-detection | Solo engineer, prototypes, MVPs |
@@ -160,6 +162,8 @@ Start with just a CEO. Everything works. Add roles and responsibilities shift au
 <br>
 
 ## Modules
+
+Modules are composable capabilities you layer on top of the base team. Each module adds skills, tasks, and optionally heartbeat sections to the relevant roles. Modules are additive — you can combine them freely and they degrade gracefully when a role they extend isn't present.
 
 ### Strategy & Planning
 
