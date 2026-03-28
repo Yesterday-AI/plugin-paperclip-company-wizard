@@ -6,6 +6,55 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.1.4] — 2026-03-28
+
+### Added
+
+- `companyDescription` field — AI wizard now generates a comprehensive 2-4 paragraph company description that's stored in `WizardContext` and passed to the Paperclip API when creating the company
+- Preset role merging — AI wizard merges preset roles with AI-selected roles so preset roles aren't lost when the AI omits them
+- Interview guidance — interview system prompt now covers what to ask about (stage, quality vs speed, team needs, repo details) and skips questions already answered
+- Information preservation section — prompts instruct the AI to write thorough `companyDescription`, `goalDescription`, and `projectDescription` fields as the company's permanent record
+- `launch-pack` preset — full executive team launch with CTO + CMO: strategy, tech, and marketing from day one
+- 4 new modules: `codebase-onboarding` (audit existing codebases), `triage` (classify inbound GitHub issues), `dependency-management` (CVE scanning, safe patching), `release-management` (semver, changelogs, tagging)
+- `repo-maintenance` preset — custodial maintenance for existing repos using the new modules
+
+### Changed
+
+- AI wizard config format: `extraModules`/`extraRoles` → `modules`/`roles` (all-inclusive lists that include preset defaults)
+- AI wizard prompts now explicitly document that `engineer` is NOT a base role and must be listed for software projects
+- Interview start message now includes the user's initial description (`{{DESCRIPTION}}`) so the AI has context from turn one
+- Generate-config message reminds the AI to include all non-base roles and write thorough descriptions
+- Single-shot system prompt restructured with numbered steps, "How Roles Work" section, and information preservation guidelines
+- Template counts: 15 presets, 26 modules, 17 optional roles
+
+### Fixed
+
+- AI wizard no longer silently drops preset roles — `StepAiWizard` merges preset and AI-selected role arrays before dispatching
+- Interview-mode template now passes `{{DESCRIPTION}}` in the start message (was previously blank, losing user context)
+
+## [0.1.3] — 2026-03-28
+
+### Added
+
+- `publish:npm` and `prepublishOnly` scripts in `package.json` for streamlined npm publishing
+- `files` whitelist in `package.json` to control published package contents
+
+## [0.1.2] — 2026-03-25
+
+### Changed
+
+- Updated plugin references and repository links to point to the new repo
+- Updated favicon path and added new favicon SVG
+- Updated author name in manifest
+
+## [0.1.1] — 2026-03-22
+
+### Changed
+
+- Version bump and manifest updates
+
+---
+
 ## [0.1.0] — 2026-03-18
 
 Initial release of the plugin. Replaces the standalone Clipper CLI with a native Paperclip plugin.

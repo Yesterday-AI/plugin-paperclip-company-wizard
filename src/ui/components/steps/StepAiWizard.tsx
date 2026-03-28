@@ -406,8 +406,13 @@ export function StepAiWizard() {
     }
     const validModules = [...expanded];
     const validRoles = (Array.isArray(config.roles) ? (config.roles as string[]) : []).filter(
-      (r: string) => state.roles.some((role) => role.name === r),
+      (r: string) => state.roles.some((role) => role.name === r && !role._base),
     );
+
+    // Merge preset roles with AI-selected roles so preset roles aren't lost
+    const chosenPreset = state.presets.find((p) => p.name === config.preset);
+    const presetRoles = (chosenPreset?.roles ?? []) as string[];
+    const mergedRoles = [...new Set([...presetRoles, ...validRoles])];
 
     // Apply config to wizard state but stay on ai-wizard step
     dispatch({
@@ -422,7 +427,8 @@ export function StepAiWizard() {
           ? (config.preset as string)
           : 'custom',
         selectedModules: validModules,
-        selectedRoles: validRoles,
+        selectedRoles: mergedRoles,
+        companyDescription: (config.companyDescription as string) || '',
         aiExplanation: (config.explanation as string) || (config.reasoning as string) || '',
         step: 'ai-wizard' as const,
       },

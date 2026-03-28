@@ -67,7 +67,7 @@ templates/
     └── messages.json
 ```
 
-**Current counts**: 14 presets, 22 modules, 17 optional roles (CEO is the only base role).
+**Current counts**: 15 presets, 26 modules, 17 optional roles (CEO is the only base role).
 
 ### Skill Resolution
 
@@ -96,6 +96,7 @@ Currently 3 modules have heartbeat sections: `stall-detection` (CEO), `auto-assi
 - **Inline goals** — Goals live inside presets (`goals: []` array) or modules (`goal: {}` single object). `collectGoals()` merges them at runtime. When a module has an active goal, its `tasks` array is skipped (the goal's issues replace them). Goals support `project: boolean` (default true) to control whether a dedicated Paperclip project is created.
 - **Hierarchical project resolution** — Issues resolve: milestone project → goal project → main project.
 - **`assignTo: "user"`** — Issues assigned to the board user via `assigneeUserId` (resolved during `client.connect()`).
+- **`companyDescription`** — AI wizard generates a comprehensive description of the company (what it does, what it's building, priorities, constraints). Stored in `WizardContext.companyDescription`, passed to `start-provision`, and sent to the Paperclip API as the company's `description` field.
 - **File overrides** — `WizardContext.fileOverrides` (`Record<string,string>`) stores edits made in ConfigReview. Passed to `start-provision` as `params.fileOverrides`; written over assembled files before API provisioning.
 - **Gracefully optimistic architecture** — Capabilities extend when roles are present, degrade gracefully when absent. A capability's `owners[]` chain determines primary/fallback assignment at assembly time.
 - **`adapterOverrides` field** — Module-level adapter config (e.g., `{ "chrome": true }`) merged into agent `adapterConfig` at provisioning. Keeps role templates clean.

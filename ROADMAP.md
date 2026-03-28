@@ -3,9 +3,9 @@
 ## Done
 
 - Shared skills system — deduplicate primary skills, role-specific overrides only when genuinely different
-- 21 modules: vision-workshop, market-analysis, hiring-review, tech-stack, architecture-plan, github-repo, pr-review, backlog, auto-assign, stall-detection, brand-identity, user-testing, ci-cd, monitoring, competitive-intel, documentation, security-audit, accessibility, website-relaunch, build-api, launch-mvp
-- 9 optional roles: product-owner, code-reviewer, ui-designer, ux-researcher, cto, cmo, cfo, devops, qa
-- 12 presets: fast, quality, rad, startup, research, full, secure, gtm, content, launch-mvp, build-api, website-relaunch
+- 26 modules: vision-workshop, market-analysis, hiring-review, tech-stack, architecture-plan, github-repo, pr-review, backlog, auto-assign, stall-detection, brand-identity, user-testing, ci-cd, monitoring, competitive-intel, documentation, security-audit, accessibility, website-relaunch, build-api, launch-mvp, codebase-onboarding, triage, dependency-management, release-management, game-design
+- 17 optional roles: product-owner, code-reviewer, ui-designer, ux-researcher, cto, cmo, cfo, devops, qa, technical-writer, security-engineer, customer-success, game-designer, level-designer, game-artist, audio-designer
+- 15 presets: fast, quality, rad, startup, research, full, secure, gtm, content, launch-mvp, build-api, website-relaunch, repo-maintenance, build-game, launch-pack
 - Template catalogue in README
 - Special characters in company names (stripped in PascalCase)
 - `dangerouslySkipPermissions` default for claude_local agents
@@ -36,6 +36,15 @@
 - Launch MVP module — `launch-mvp` with 4 milestones, 8 issues (pure lifecycle structure)
 - Presets `launch-mvp`, `build-api`, and `website-relaunch` — thin bundles referencing goal-carrying modules
 - Chrome enabled by default for UI Designer roles
+- `companyDescription` field — AI wizard generates comprehensive company descriptions, passed to Paperclip API
+- AI wizard prompt overhaul — explicit role instructions (engineer not base), interview guidance, information preservation, all-inclusive module/role lists
+- Preset role merging — AI wizard merges preset roles with AI-selected roles
+- `launch-pack` preset — full executive team launch with CTO + CMO
+- `repo-maintenance` preset — custodial maintenance for existing repos
+- `build-game` preset — game development with Game Designer, Game Artist, Audio Designer
+- 4 maintenance modules: codebase-onboarding, triage, dependency-management, release-management
+- `game-design` module — GDD creation, mechanics design, balancing
+- 8 new optional roles: technical-writer, security-engineer, customer-success, game-designer, level-designer, game-artist, audio-designer
 
 ## In Progress
 

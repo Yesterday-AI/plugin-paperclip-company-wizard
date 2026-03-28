@@ -4,7 +4,7 @@
 
 Company Wizard is a [Paperclip](https://github.com/paperclipai/paperclip) plugin for bootstrapping agent company workspaces from modular, composable templates. It provides an interactive wizard (manual and AI-powered paths) that assembles ready-to-run companies — roles, workflows, skills, process docs, heartbeat sections, and Paperclip API provisioning — all from a single UI.
 
-The plugin runs inside the Paperclip board UI and ships with a complete template library: 14 presets, 22 modules, 17 optional roles (CEO is the only base role).
+The plugin runs inside the Paperclip board UI and ships with a complete template library: 15 presets, 26 modules, 17 optional roles (CEO is the only base role).
 
 ## Why
 
@@ -52,13 +52,13 @@ src/
 
 templates/
 ├── roles/                     # All roles with role.meta.json
-├── modules/                   # Composable capabilities (22 modules)
+├── modules/                   # Composable capabilities (26 modules)
 │   └── <module>/
 │       ├── module.meta.json   # capabilities[], activatesWithRoles[], tasks[], goal?, adapterOverrides?
 │       ├── skills/            # Shared primary skills
 │       ├── agents/<role>/     # Role-specific overrides, fallbacks, heartbeat sections
 │       └── docs/              # Shared docs injected into all agents
-└── presets/                   # Curated combinations (14 presets, may include goals[])
+└── presets/                   # Curated combinations (15 presets, may include goals[])
 ```
 
 Each module contains:

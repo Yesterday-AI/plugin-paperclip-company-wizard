@@ -34,6 +34,7 @@ export function StepProvision() {
 
     startProvision({
       companyName: state.companyName,
+      companyDescription: state.companyDescription || undefined,
       goal: state.goal.title ? state.goal : undefined,
       ceoAdapter: state.ceoAdapter,
       presetName: state.presetName,

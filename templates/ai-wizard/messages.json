@@ -1,6 +1,6 @@
 {
-  "interviewStart": "Start the interview. Ask your first question.",
+  "interviewStart": "Here's what I want to build:\n\n{{DESCRIPTION}}\n\nStart the interview. Ask your first question.",
   "summaryRequest": "Now summarize what you understood about my company and needs. Keep it brief.",
   "iterateRequest": "Not quite right. Let me clarify. Ask 3 more follow-up questions to get a better understanding.",
-  "recommendationRequest": "Great. Now generate your recommendation. Explain your reasoning first (which preset and why, which extra modules and roles and why), then output the JSON configuration."
+  "recommendationRequest": "Great. Now generate your recommendation. Explain your reasoning first (which preset and why, which extra modules and roles and why), then output the JSON configuration. Remember: include ALL non-base roles the company needs in the roles array (engineer is NOT a base role — list it if this project involves code). Write a thorough companyDescription that captures everything we discussed."
 }

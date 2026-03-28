@@ -52,6 +52,7 @@ export interface WizardState {
   // AI wizard
   aiDescription: string;
   aiExplanation: string;
+  companyDescription: string;
   aiLoading: boolean;
 
   // Templates
@@ -167,6 +168,7 @@ const initialState: WizardState = {
   selectedRoles: [],
   aiDescription: '',
   aiExplanation: '',
+  companyDescription: '',
   aiLoading: false,
   presets: [],
   modules: [],

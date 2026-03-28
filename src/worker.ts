@@ -434,7 +434,12 @@ const plugin = definePlugin({
 
       // Step 5: Create company (SDK: companies.read only → HTTP client)
       log('Creating company...');
-      const company = await client.createCompany({ name: companyName });
+      const companyDescription =
+        typeof params.companyDescription === 'string' ? params.companyDescription.trim() : '';
+      const company = await client.createCompany({
+        name: companyName,
+        description: companyDescription || undefined,
+      });
       const companyId = company.id;
       log(`✓ Company "${companyName}" created`);
 
